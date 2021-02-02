@@ -1,0 +1,97 @@
+---
+title: "vignette"
+date: "`r BiocStyle::doc_date()`"
+author:
+- name: Adam Chan
+  affiliation:  
+  - School of Mathematics and Statistics, The University of Sydney, Sydney, New South Wales, Australia
+  email: adam.s.chan@sydney.edu.au
+- name: Ellis Patrick
+  affiliation:
+  - &WIMR Westmead Institute for Medical Research, University of Sydney, Australia
+  - School of Mathematics and Statistics, The University of Sydney, Sydney, New South Wales, Australia
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+# Load required packages
+suppressPackageStartupMessages({
+  library(treekoR)
+  library(SingleCellExperiment)
+})
+```
+
+# Installation
+```{r eval=F}
+
+```
+
+# Overview
+__ is a novel framework that aims to utilise the hierarchical nature of single cell cytometry data, to find robust and interpretable associations between cell subsets and patient clinical end points. This is achieved by deriving the tree structure of cell clusters, followed by measuring the proportion to parent (proportions of each node in the tree relative to the number of cells belonging to the immediate parent node), in addition to the proportion to all (proportion of cells in each node relative to all cells). These proportions are then used in significance testing and classification models to determine which cell subpopulation proportions most correlated with the patient clinical outcome of interest. __ then provides an interactive visualisation which helps to highlight these results.
+
+# Usage
+## Example Data
+- DeBiasi_COVID_CD8_samp:
+A `SingleCellExperiment` containing samples of flow cytometry expression data from 39 patients. This data represents a subset of a dataset that was originally used by De Biasi et al. (2020) for the characterisation of CD8+ T cells, comparing between COVID-19 patients and healthy controls.
+
+```{r}
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+```
+
+## Construction of Hierarchy of Clusters
+
+The scaled median marker expression for each cluster was calculated which was used to construct a hierarchical tree. 
+
+```{r}
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+levels(clusters) <- c(levels(clusters)[1:99], "test")
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_tree <- getClusterTree(exprs,
+                             clusters)
+```
+
+## Significance testing of Cell Subpopulations
+
+Proportions of each cell cluster in the tree are calculated - both the proportion relative to all and proportion relative to the hierarchical parent. These proportions are used in a two sample t-test, testing for equal means between the patient clinical outcome using both types of proportions.
+
+```{r}
+tested_tree <- testTree(clust_tree$clust_tree,
+                      exprs=exprs,
+                      clusters=clusters,
+                      samples=samples,
+                      classes=classes,
+                      pos_class_name=NULL,
+                      subjects=NULL,
+                      paired = FALSE)
+```
+
+## Interactive Visualisation
+
+The results of the previous steps are visualised by a coloured tree with a corresponding heatmap. The heatmap displays the median scaled marker expressions of each cluster to help understand what cell type each cluster may represent, and the tree not only reveals how clusters have been hierarchically aggregated, but is coloured on each node by the test statistic obtained when testing using the proportions relative to all of that node, with the branch connecting the child to the parent coloured by the test statistic obtained when testing using the proportions relative to parent of the child node. 
+
+
+```{r}
+plotInteractiveHeatmap(tested_tree,
+                       clust_med_df = clust_tree$median_freq,
+                       clusters=clusters)
+```
+

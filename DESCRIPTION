@@ -1,11 +1,19 @@
 Package: treekoR
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Cytometry Cluster Hierarchy and Proportions to Parent
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
+Author: Adam Chan
+Maintainer: Adam Chan <adam.s.chan@sydney.edu.au>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
+Imports:
+    dplyr
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 7.1.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    BiocStyle
+VignetteBuilder: knitr
