@@ -16,13 +16,24 @@ testTree(
 )
 }
 \arguments{
-\item{paired}{}
+\item{phylo}{a ggtree object}
 
-\item{tree}{a ggtree object}
-
-\item{cells}{a dataframe containing the clusters for each cell, the
+\item{exprs}{a dataframe containing the clusters for each cell, the
 sample id, the subject id (needed for paired tests), and the group
 that the subject/sample belongs to}
+
+\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+
+\item{samples}{a vector containing the patient outcome/class each cell belongs to}
+
+\item{classes}{a vector identifying the patient each cell belongs to}
+
+\item{pos_class_name}{a character indicating which class is positive}
+
+\item{subjects}{a vector containing which subject the cell belongs to, used
+to identify matched samples in paired t-tests (not yet tested)}
+
+\item{paired}{a boolean indicating whether to performed paired t-tests (not yet tested)}
 }
 \value{
 

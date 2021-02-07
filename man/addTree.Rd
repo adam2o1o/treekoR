@@ -4,25 +4,16 @@
 \alias{addTree}
 \title{Title}
 \usage{
-addTree(
-  p,
-  offset = 0.3,
-  width = 0,
-  color = NULL,
-  cluster_angle = 0,
-  colnames = TRUE,
-  colnames_position = "bottom",
-  colnames_angle = NULL,
-  colnames_level = NULL,
-  colnames_offset_x = 0,
-  colnames_offset_y = -0.55,
-  font_size = 2.5,
-  hjust = 0,
-  legend_title = "Clusters"
-)
+addTree(p, offset = 0.3, font_size = 2.5, hjust = 0)
 }
 \arguments{
 \item{p}{a phylogenetic tree plot created from the ggtree() function}
+
+\item{offset}{distance between leaf nodes on the tree and their labels}
+
+\item{font_size}{font size of leaf labels}
+
+\item{hjust}{horizontal justification as defined in ggplot2}
 }
 \description{
 a function to create a skeleton tree diagram to display significance

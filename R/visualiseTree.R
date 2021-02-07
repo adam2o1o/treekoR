@@ -2,38 +2,17 @@
 #' @description a function to create a skeleton tree diagram to display significance
 #' testing results on each node
 #'
-#' @param offset
-#' @param width
-#' @param color
-#' @param cluster_angle
-#' @param colnames
-#' @param colnames_position
-#' @param colnames_angle
-#' @param colnames_level
-#' @param colnames_offset_x
-#' @param colnames_offset_y
-#' @param font_size
-#' @param hjust
-#' @param legend_title
+#' @param offset distance between leaf nodes on the tree and their labels
+#' @param font_size font size of leaf labels
+#' @param hjust horizontal justification as defined in ggplot2
 #' @param p a phylogenetic tree plot created from the ggtree() function
 #'
-#' @export
 #' @importFrom ggtree geom_tiplab
 
 addTree <- function(p,
                     offset = 0.3,
-                    width = 0,
-                    color = NULL,
-                    cluster_angle = 0,
-                    colnames = TRUE,
-                    colnames_position = "bottom",
-                    colnames_angle = NULL,
-                    colnames_level = NULL,
-                    colnames_offset_x = 0,
-                    colnames_offset_y = -0.55,
                     font_size = 2.5,
-                    hjust = 0,
-                    legend_title = "Clusters") {
+                    hjust = 0) {
 
   p$data$label <- ifelse(is.na(p$data$label),
                          p$data$node,
@@ -56,10 +35,16 @@ addTree <- function(p,
 #' The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
 #' The column names should also correspond to the labels you want to use
 #' @param offset the distance between the tree plot and heatmap
-#' @param width the width of each tile
+#' @param width width of each tile in the heatmap
+#' @param expand_y_lim white space below heatmap
+#' @param low colour used for low values on heatmap
+#' @param mid colour used for medium values on heatmap
+#' @param high colour used for large values on heatmap
+#' @param colnames_angle angle for x-axis label
+#' @param metric_name legend title
 #'
-#' @export
-
+#' @import ggiraph
+#' @import ggplot2
 addHeatMap <- function(p,
                        cluster_medians,
                        offset = 0.5,
@@ -76,6 +61,10 @@ addHeatMap <- function(p,
 
   # Get x value for start of heatmap
   start_x <- max(tree_df$x, na.rm = TRUE) + offset
+
+  clust_rows <- rownames(cluster_medians)
+  cluster_medians <- as.data.frame(scale(cluster_medians))
+  rownames(cluster_medians) <- clust_rows
 
   # Create Heatmap Matrix using y values from tree and getting the x values
   heatmap_df <- cluster_medians %>%
@@ -120,10 +109,12 @@ addHeatMap <- function(p,
 #' Title
 #' @description a function to add the frequency bars for each cluster
 #'
+#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric)
+#' @param offset distance between the heatmap and frequency bars
+#' @param bar_length length of bar with max frequency
+#' @param bar_width width of each frequency bar
+#' @param freq_labels boolean indicated whether or not to show frequency bar labels
 #' @param p a phylogenetic tree plot created from the ggtree() function
-#'
-#' @export
-
 addFreqBars <- function(p,
                         clusters,
                         offset = 0.75,
@@ -176,21 +167,26 @@ addFreqBars <- function(p,
 
 
 #' Title
+#'
+#' @param tree a tree plot created from the ggtree() function
+#' with p$data containing test statisic and p-
+#' @param point_size size of nodes in the tree
+#' @param high colour for large values
+#' @param low colour for low values
+#' @param mid colour for middle values
+#'
 #' @description Adding statistical test results onto the tree by using
 #' colourful nodes and branches
 #' Takes a ggtree object with test results for each node and returns
 #' a ggtree graph object
 #'
-#' @param p a phylogenetic tree plot created from the ggtree() function
-#' with p$data containing test statisic and p-
-#'
 #' @export
 
 colourTree <- function(tree,
                        point_size = 1.5,
-                       high = "red",
-                       mid = "lightgrey",
-                       low = "blue"){
+                       high = "#00c434",
+                       low = "purple",
+                       mid="ivory2"){
 
 
   tree$data$label <- ifelse(is.na(tree$data$label),
@@ -232,7 +228,32 @@ colourTree <- function(tree,
 #' tested for proportion to all and proportion to parent cluster
 #'
 #' @param testedTree a ggtree object that has been run through the testTree
-#' function
+#' @param clust_med_df a dataframe with the cluster medians.
+#' The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
+#' The column names should also correspond to the labels you want to use
+#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric)
+#' @param svg_width width of svg canvas
+#' @param svg_height height of svf canvas
+#' @param tr_offset distance between leaf nodes on the tree and their labels
+#' @param tr_font_size font size of leaf labels
+#' @param tr_point_size size of each node in the tree
+#' @param tr_col_high colour used for high test statistics, coloured on the nodes and branches
+#' of the tree
+#' @param tr_col_low colour used for low test statistics, coloured on the nodes and branches
+#' of the tree
+#' @param tr_col_mid colour used for medium test statistics, coloured on the nodes and branches
+#' of the tree
+#' @param hm_offset distance between the tree and the heatmap
+#' @param hm_tile_width width of each tile in the heatmap
+#' @param hm_expand_y_lim white space below heatmap
+#' @param hm_col_high colour used for large values on heatmap
+#' @param hm_col_mid colour used for medium values on heatmap
+#' @param hm_col_low colour used for low values on heatmap
+#' @param fb_offset distance between the heatmap and frequency bars
+#' @param fb_bar_length length of bar with max frequency
+#' @param fb_bar_width width of each frequency bar
+#' @param fb_freq_labels boolean indicated whether or not to show frequency bar labels
+#'
 #' @import ggiraph
 #' @import ggplot2
 #' @importFrom magrittr %>%
@@ -246,14 +267,33 @@ plotInteractiveHeatmap <- function(testedTree,
                                    clust_med_df,
                                    clusters,
                                    svg_width=13,
-                                   svg_height=9) {
+                                   svg_height=9,
+                                   tr_offset = 0.3,
+                                   tr_font_size = 2,
+                                   tr_point_size = 1.5,
+                                   tr_col_high = "#00c434",
+                                   tr_col_low = "purple",
+                                   tr_col_mid="ivory2",
+                                   hm_offset = 1,
+                                   hm_tile_width = 1,
+                                   hm_expand_y_lim = 20,
+                                   hm_col_high = "#cc2010",
+                                   hm_col_mid="#fff8de",
+                                   hm_col_low="#66a6cc",
+                                   fb_offset = 0.75,
+                                   fb_bar_length = 3,
+                                   fb_bar_width=0.4,
+                                   fb_freq_labels = FALSE) {
   # Plot heatmap with tree results
   gTree <- testedTree %>%
-    colourTree(high = "#00c434", low = "purple", mid="ivory2", point_size = 1.5) %>%
-    addTree(font_size = 2) %>%
-    addHeatMap(cluster_medians = clust_med_df, offset=1,
-               high="#cc2010", mid="#fff8de", low="#66a6cc") %>%
-    addFreqBars(clusters=clusters, offset = 0.75, bar_length = 3, bar_width=0.4)
+    colourTree(high = tr_col_high, low = tr_col_low, mid=tr_col_mid,
+               point_size = tr_point_size) %>%
+    addTree(offset = tr_offset, font_size = tr_font_size) %>%
+    addHeatMap(cluster_medians = clust_med_df, offset=hm_offset,
+               high=hm_col_high, mid=hm_col_mid, low=hm_col_low,
+               width = hm_tile_width, expand_y_lim = hm_expand_y_lim) %>%
+    addFreqBars(clusters=clusters, offset = fb_offset,
+                bar_length = fb_bar_length, bar_width=fb_bar_width)
 
   max_val <- max(abs(c(testedTree$data$statAll, testedTree$data$statParent)))
 

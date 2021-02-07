@@ -7,14 +7,22 @@
 colourTree(
   tree,
   point_size = 1.5,
-  high = "red",
-  mid = "lightgrey",
-  low = "blue"
+  high = "#00c434",
+  low = "purple",
+  mid = "ivory2"
 )
 }
 \arguments{
-\item{p}{a phylogenetic tree plot created from the ggtree() function
+\item{tree}{a tree plot created from the ggtree() function
 with p$data containing test statisic and p-}
+
+\item{point_size}{size of nodes in the tree}
+
+\item{high}{colour for large values}
+
+\item{low}{colour for low values}
+
+\item{mid}{colour for middle values}
 }
 \description{
 Adding statistical test results onto the tree by using

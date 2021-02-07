@@ -9,12 +9,72 @@ plotInteractiveHeatmap(
   clust_med_df,
   clusters,
   svg_width = 13,
-  svg_height = 9
+  svg_height = 9,
+  tr_offset = 0.3,
+  tr_font_size = 2,
+  tr_point_size = 1.5,
+  tr_col_high = "#00c434",
+  tr_col_low = "purple",
+  tr_col_mid = "ivory2",
+  hm_offset = 1,
+  hm_tile_width = 1,
+  hm_expand_y_lim = 20,
+  hm_col_high = "#cc2010",
+  hm_col_mid = "#fff8de",
+  hm_col_low = "#66a6cc",
+  fb_offset = 0.75,
+  fb_bar_length = 3,
+  fb_bar_width = 0.4,
+  fb_freq_labels = FALSE
 )
 }
 \arguments{
-\item{testedTree}{a ggtree object that has been run through the testTree
-function}
+\item{testedTree}{a ggtree object that has been run through the testTree}
+
+\item{clust_med_df}{a dataframe with the cluster medians.
+The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
+The column names should also correspond to the labels you want to use}
+
+\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+
+\item{svg_width}{width of svg canvas}
+
+\item{svg_height}{height of svf canvas}
+
+\item{tr_offset}{distance between leaf nodes on the tree and their labels}
+
+\item{tr_font_size}{font size of leaf labels}
+
+\item{tr_point_size}{size of each node in the tree}
+
+\item{tr_col_high}{colour used for high test statistics, coloured on the nodes and branches
+of the tree}
+
+\item{tr_col_low}{colour used for low test statistics, coloured on the nodes and branches
+of the tree}
+
+\item{tr_col_mid}{colour used for medium test statistics, coloured on the nodes and branches
+of the tree}
+
+\item{hm_offset}{distance between the tree and the heatmap}
+
+\item{hm_tile_width}{width of each tile in the heatmap}
+
+\item{hm_expand_y_lim}{white space below heatmap}
+
+\item{hm_col_high}{colour used for large values on heatmap}
+
+\item{hm_col_mid}{colour used for medium values on heatmap}
+
+\item{hm_col_low}{colour used for low values on heatmap}
+
+\item{fb_offset}{distance between the heatmap and frequency bars}
+
+\item{fb_bar_length}{length of bar with max frequency}
+
+\item{fb_bar_width}{width of each frequency bar}
+
+\item{fb_freq_labels}{boolean indicated whether or not to show frequency bar labels}
 }
 \description{
 This function takes a hierarchical tree which has been

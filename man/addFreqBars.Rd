@@ -15,6 +15,16 @@ addFreqBars(
 }
 \arguments{
 \item{p}{a phylogenetic tree plot created from the ggtree() function}
+
+\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+
+\item{offset}{distance between the heatmap and frequency bars}
+
+\item{bar_length}{length of bar with max frequency}
+
+\item{bar_width}{width of each frequency bar}
+
+\item{freq_labels}{boolean indicated whether or not to show frequency bar labels}
 }
 \description{
 a function to add the frequency bars for each cluster

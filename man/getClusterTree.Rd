@@ -5,7 +5,26 @@
 \title{Title
 This function takes a CATALYST sce with clusters and creates a hierarchical tree}
 \usage{
-getClusterTree(exprs, clusters, hierarchy_method = "average")
+getClusterTree(
+  exprs,
+  clusters,
+  hierarchy_method = "hopach",
+  hopach_kmax = 5,
+  hopach_K = 10
+)
+}
+\arguments{
+\item{exprs}{a dataframe containing single cell expression data}
+
+\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+
+\item{hierarchy_method}{a string indicating the hierarchical tree construction method to be used}
+
+\item{hopach_kmax}{integer between 1 and 9 specifying the maximum number of children at each
+node in the tree}
+
+\item{hopach_K}{positive integer specifying the maximum number of levels in the tree. Must be
+15 or less, due to computational limitations (overflow)}
 }
 \value{
 

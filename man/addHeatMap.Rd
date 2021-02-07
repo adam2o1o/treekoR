@@ -26,7 +26,19 @@ The column names should also correspond to the labels you want to use}
 
 \item{offset}{the distance between the tree plot and heatmap}
 
-\item{width}{the width of each tile}
+\item{width}{width of each tile in the heatmap}
+
+\item{expand_y_lim}{white space below heatmap}
+
+\item{low}{colour used for low values on heatmap}
+
+\item{mid}{colour used for medium values on heatmap}
+
+\item{high}{colour used for large values on heatmap}
+
+\item{colnames_angle}{angle for x-axis label}
+
+\item{metric_name}{legend title}
 }
 \description{
 a function to add a heatmap of cluster medians alongisde the phylogenetic tree
