@@ -297,11 +297,11 @@ getTreeResults <- function(testedTree,
     )])
 
   if (sort_by == "parent") {
-    res <- res[sort(res$pvalParent),]
+    res <- res[order(res$pvalParent),]
   }
 
   if (sort_by == "all") {
-    res <- res[sort(res$pvalAll),]
+    res <- res[order(res$pvalAll),]
   }
 
   return(res)
