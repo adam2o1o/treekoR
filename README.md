@@ -5,8 +5,8 @@
 
 - Deriving the tree structure of cell clusters
 - Measuring the proportion to parent (proportions of each node in the tree relative to the number of cells belonging to the immediate parent node), in addition to the proportion to all (proportion of cells in each node relative to all cells)
-- Significance testing and classification to determine which cell subpopulation proportions most correlated with the patient clinical outcome of interest, using the calculated proportions
-- Providing an interactive html visualisation which helps to highlight key results
+- Significance testing, using the calculated proportions, to determine which cell subpopulation proportions most are correlated with the patient clinical outcome of interest
+- Providing an interactive html visualisation to help highlight key results
 
 ## Installation
 ```r

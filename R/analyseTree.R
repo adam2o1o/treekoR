@@ -128,13 +128,13 @@ getClusterTree <- function(exprs,
                          kmax=hopach_kmax,
                          K=hopach_K)
     hc_phylo <- hopachToPhylo(hp_dend)
+    hc_phylo$tip.label <- rownames(res2)[as.numeric(hc_phylo$tip.label)]
   } else {
     clust_dist <- dist(scale(res2))
     hc_dend <- hclust(clust_dist, method=hierarchy_method)
     hc_phylo <- as.phylo(hc_dend)
+    hc_phylo$tip.label <- as.character(res[["cluster_id"]])
   }
-
-  hc_phylo$tip.label <- as.character(res[["cluster_id"]])
 
   return(list(
     median_freq = res2,
@@ -188,8 +188,8 @@ findChildren <- function(tree) {
 #' sample id, the subject id (needed for paired tests), and the group
 #' that the subject/sample belongs to
 #' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric)
-#' @param samples a vector containing the patient outcome/class each cell belongs to
-#' @param classes a vector identifying the patient each cell belongs to
+#' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param samples a vector identifying the patient each cell belongs to
 #' @param pos_class_name a character indicating which class is positive
 #' @param subjects a vector containing which subject the cell belongs to, used
 #' to identify matched samples in paired t-tests (not yet tested)
@@ -283,15 +283,26 @@ testTree <- function(phylo,
 #' Title
 #'
 #' @param testedTree a ggtree object outputed from testTree()
+#' @param sort_by whether to sort by p-values testing via proportions to parent or
+#' p-values testing via absolute proportions. Values can can be c(NA, "parent", "all")
 #'
 #' @return
 #' @export
-getTreeResults <- function(testedTree){
+getTreeResults <- function(testedTree,
+                           sort_by = "parent"){
   res <- as.data.frame(testedTree$data[,c(
     "parent", "node", "isTip",
     "clusters", "statAll", "statParent",
     "pvalAll", "pvalParent"
     )])
+
+  if (sort_by == "parent") {
+    res <- res[sort(res$pvalParent),]
+  }
+
+  if (sort_by == "all") {
+    res <- res[sort(res$pvalAll),]
+  }
 
   return(res)
 }

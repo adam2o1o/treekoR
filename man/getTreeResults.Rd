@@ -4,10 +4,13 @@
 \alias{getTreeResults}
 \title{Title}
 \usage{
-getTreeResults(testedTree)
+getTreeResults(testedTree, sort_by = "parent")
 }
 \arguments{
 \item{testedTree}{a ggtree object outputed from testTree()}
+
+\item{sort_by}{whether to sort by p-values testing via proportions to parent or
+p-values testing via absolute proportions. Values can can be c(NA, "parent", "all")}
 }
 \value{
 

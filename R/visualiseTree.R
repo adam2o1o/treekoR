@@ -8,6 +8,7 @@
 #' @param p a phylogenetic tree plot created from the ggtree() function
 #'
 #' @importFrom ggtree geom_tiplab
+#' @return a graph object with the tree and its labels
 
 addTree <- function(p,
                     offset = 0.3,
