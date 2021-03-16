@@ -1,7 +1,7 @@
 Package: treekoR
 Type: Package
 Title: Cytometry Cluster Hierarchy and Proportions to Parent
-Version: 0.1.0
+Version: 0.99.1
 Author: Adam Chan
 Maintainer: Adam Chan <adam.s.chan@sydney.edu.au>
 biocViews: 
