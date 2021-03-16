@@ -76,7 +76,39 @@ of the tree}
 
 \item{fb_freq_labels}{boolean indicated whether or not to show frequency bar labels}
 }
+\value{
+an interactive ggplot object containing the hierarchical tree of clusters
+coloured by significance testing results, with corresponding heatmap and a scatterplot
+comparing significance whne testing using proportions to parent vs. absolute proportions
+}
 \description{
 This function takes a hierarchical tree which has been
 tested for proportion to all and proportion to parent cluster
+}
+\examples{
+library(SingleCellExperiment)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_tree <- getClusterTree(exprs,
+                             clusters,
+                             hierarchy_method="hopach")
+
+tested_tree <- testTree(clust_tree$clust_tree,
+                        exprs=exprs,
+                        clusters=clusters,
+                        samples=samples,
+                        classes=classes,
+                        pos_class_name=NULL,
+                        subjects=NULL,
+                        paired = FALSE)
+
+plotInteractiveHeatmap(tested_tree,
+                       clust_med_df = clust_tree$median_freq,
+                       clusters=clusters)
 }

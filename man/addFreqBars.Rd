@@ -26,6 +26,10 @@ addFreqBars(
 
 \item{freq_labels}{boolean indicated whether or not to show frequency bar labels}
 }
+\value{
+an interactive ggplot graph object with frequency bars of clusters alongside
+heatmap of cluster median expression
+}
 \description{
 a function to add the frequency bars for each cluster
 }

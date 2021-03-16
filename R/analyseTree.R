@@ -1,4 +1,4 @@
-#' Title
+#' runHOPACH
 #'
 #' @param data dataframe containing the median expression of the clusters/cell types
 #' @param K  positive integer specifying the maximum number of levels in the tree. Must be
@@ -7,9 +7,27 @@
 #' node in the tree
 #' @param dissimilarity_metric metric used to calculate dissimilarities between clusters/cell types
 #'
-#' @return
-#' @export
 #' @import hopach
+#' @return a list containing the groups each cluster belongs to at each level of the hopach tree
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' library(data.table)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_med_dt <- as.data.table(exprs)
+#' clust_med_dt[, cluster_id := clusters]
+#' res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
+#' res2 <- res[,.SD, .SDcols = !c('cluster_id')]
+#'
+#' hopach_res <- runHOPACH(as.data.frame(scale(res2)))
+#' @export
 runHOPACH <- function(data, K = 10, kmax = 5, dissimilarity_metric = "cor") {
   # Compute the distance matrix using correlation
   dist <- distancematrix(data, d = dissimilarity_metric)
@@ -49,12 +67,29 @@ runHOPACH <- function(data, K = 10, kmax = 5, dissimilarity_metric = "cor") {
 #'
 #' @param res an object returned from the runHOPACH() function
 #'
-#' @return
 #' @importFrom ape read.tree
+#' @return a phylogram converted from the outputted list from the runHOPACH function
+#' @examples
+#' library(SingleCellExperiment)
+#' library(data.table)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_med_dt <- as.data.table(exprs)
+#' clust_med_dt[, cluster_id := clusters]
+#' res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
+#' res2 <- res[,.SD, .SDcols = !c('cluster_id')]
+#'
+#' hopach_res <- runHOPACH(as.data.frame(scale(res2)))
+#' phylo <- hopachToPhylo(hopach_res)
 #'
 #' @export
 hopachToPhylo <- function(res) {
-
   cutree_list_df <- do.call(cbind, res$cutree_list)
   for (i in 1:(ncol(cutree_list_df)-1)) {
     cutree_list_df[,i] <- paste0(i,"_",cutree_list_df[,i])
@@ -65,10 +100,10 @@ hopachToPhylo <- function(res) {
   # A vector containing the current grouping of nodes as the loop iterates
   current_nodes <- base_nodes
 
-  #' This loop is to iterate through the levels of the tree and
-  #' sequentially combine clusters in a format to be read into a
-  #' phylogenetic tree
-  #' ------------------------------------------------------------
+  # This loop is to iterate through the levels of the tree and
+  # sequentially combine clusters in a format to be read into a
+  # phylogenetic tree
+  # ------------------------------------------------------------
   for (i in (ncol(cutree_list_df)-1):1) {
     # Get parent nodes with more than two children
     unique_nodes <- names(table(cutree_list_df[,i])[which(table(cutree_list_df[,i]) >= 2)])
@@ -94,23 +129,42 @@ hopachToPhylo <- function(res) {
 }
 
 
-#' Title
+#' getClusterTree
 #' This function takes a CATALYST sce with clusters and creates a hierarchical tree
 #'
 #' @param exprs a dataframe containing single cell expression data
-#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric)
-#' @param hierarchy_method a string indicating the hierarchical tree construction method to be used
-#' @param hopach_kmax integer between 1 and 9 specifying the maximum number of children at each
-#' node in the tree
-#' @param hopach_K positive integer specifying the maximum number of levels in the tree. Must be
-#' 15 or less, due to computational limitations (overflow)
+#' @param clusters a vector representing the cell type or cluster of each cell
+#' (can be character or numeric)
+#' @param hierarchy_method a string indicating the hierarchical tree construction
+#'  method to be used
+#' @param hopach_kmax integer between 1 and 9 specifying the maximum number of
+#' children at each node in the tree
+#' @param hopach_K positive integer specifying the maximum number of levels in the
+#' tree. Must be 15 or less, due to computational limitations (overflow)
 #'
 #' @return
 #' @import data.table
 #' @importFrom ggtree ggtree
 #' @importFrom ape as.phylo
+#' @importFrom stats dist hclust median
 #'
+#' @return a list containing the cluster median frequencies and a phylogram of the
+#' hierarchical tree
 #' @export
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
 getClusterTree <- function(exprs,
                            clusters,
                            hierarchy_method="hopach",
@@ -146,7 +200,8 @@ getClusterTree <- function(exprs,
 #'
 #' @param tree a ggtree object
 #'
-#' @return
+#' @return a ggtree object with the data containing a column with the clusters
+#' contained in each node
 findChildren <- function(tree) {
   d <- tree$data
   d$clusters <- d$label
@@ -194,8 +249,33 @@ findChildren <- function(tree) {
 #' @param subjects a vector containing which subject the cell belongs to, used
 #' to identify matched samples in paired t-tests (not yet tested)
 #'
-#' @return
+#' @importFrom stats t.test
+#'
+#' @return a ggtree object with significance testing results in embedded data
 #' @export
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' tested_tree <- testTree(clust_tree$clust_tree,
+#'                         exprs=exprs,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes,
+#'                         pos_class_name=NULL,
+#'                         subjects=NULL,
+#'                         paired = FALSE)
 testTree <- function(phylo,
                      exprs,
                      clusters,
@@ -286,8 +366,36 @@ testTree <- function(phylo,
 #' @param sort_by whether to sort by p-values testing via proportions to parent or
 #' p-values testing via absolute proportions. Values can can be c(NA, "parent", "all")
 #'
-#' @return
+#' @return a dataframe with hierarchical tree nodes, corresponding clusters and
+#' corresponding significance testing results
 #' @export
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' tested_tree <- testTree(clust_tree$clust_tree,
+#'                         exprs=exprs,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes,
+#'                         pos_class_name=NULL,
+#'                         subjects=NULL,
+#'                         paired = FALSE)
+#'
+#' res_df <- getTreeResults(tested_tree)
+#'
+#' head(res_df, 10)
 getTreeResults <- function(testedTree,
                            sort_by = "parent"){
   res <- as.data.frame(testedTree$data[,c(

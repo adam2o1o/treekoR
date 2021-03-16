@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyseTree.R
 \name{getClusterTree}
 \alias{getClusterTree}
-\title{Title
+\title{getClusterTree
 This function takes a CATALYST sce with clusters and creates a hierarchical tree}
 \usage{
 getClusterTree(
@@ -16,20 +16,39 @@ getClusterTree(
 \arguments{
 \item{exprs}{a dataframe containing single cell expression data}
 
-\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+\item{clusters}{a vector representing the cell type or cluster of each cell
+(can be character or numeric)}
 
-\item{hierarchy_method}{a string indicating the hierarchical tree construction method to be used}
+\item{hierarchy_method}{a string indicating the hierarchical tree construction
+method to be used}
 
-\item{hopach_kmax}{integer between 1 and 9 specifying the maximum number of children at each
-node in the tree}
+\item{hopach_kmax}{integer between 1 and 9 specifying the maximum number of
+children at each node in the tree}
 
-\item{hopach_K}{positive integer specifying the maximum number of levels in the tree. Must be
-15 or less, due to computational limitations (overflow)}
+\item{hopach_K}{positive integer specifying the maximum number of levels in the
+tree. Must be 15 or less, due to computational limitations (overflow)}
 }
 \value{
 
+
+a list containing the cluster median frequencies and a phylogram of the
+hierarchical tree
 }
 \description{
-Title
+getClusterTree
 This function takes a CATALYST sce with clusters and creates a hierarchical tree
+}
+\examples{
+library(SingleCellExperiment)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_tree <- getClusterTree(exprs,
+                             clusters,
+                             hierarchy_method="hopach")
 }

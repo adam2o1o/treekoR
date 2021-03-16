@@ -8,8 +8,7 @@
 #' @param p a phylogenetic tree plot created from the ggtree() function
 #'
 #' @importFrom ggtree geom_tiplab
-#' @return a graph object with the tree and its labels
-
+#' @return a ggtree graph object with the hierarchical tree of clusters and corresponding labels
 addTree <- function(p,
                     offset = 0.3,
                     font_size = 2.5,
@@ -46,6 +45,8 @@ addTree <- function(p,
 #'
 #' @import ggiraph
 #' @import ggplot2
+#' @return an interactive ggplot graph object with heatmap of median cluster expressions
+#'  plotted alongside hierarchical tree
 addHeatMap <- function(p,
                        cluster_medians,
                        offset = 0.5,
@@ -116,6 +117,9 @@ addHeatMap <- function(p,
 #' @param bar_width width of each frequency bar
 #' @param freq_labels boolean indicated whether or not to show frequency bar labels
 #' @param p a phylogenetic tree plot created from the ggtree() function
+#'
+#' @return an interactive ggplot graph object with frequency bars of clusters alongside
+#' heatmap of cluster median expression
 addFreqBars <- function(p,
                         clusters,
                         offset = 0.75,
@@ -167,7 +171,7 @@ addFreqBars <- function(p,
 }
 
 
-#' Title
+#' colourTree
 #'
 #' @param tree a tree plot created from the ggtree() function
 #' with p$data containing test statisic and p-
@@ -181,8 +185,37 @@ addFreqBars <- function(p,
 #' Takes a ggtree object with test results for each node and returns
 #' a ggtree graph object
 #'
+#' @importFrom utils modifyList
+#'
+#' @return an interactive ggplot graph object, plotting the hierarchical tree of clusters with
+#' nodes and branches coloured by the significance testing results.
+#'
 #' @export
-
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' tested_tree <- testTree(clust_tree$clust_tree,
+#'                         exprs=exprs,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes,
+#'                         pos_class_name=NULL,
+#'                         subjects=NULL,
+#'                         paired = FALSE)
+#'
+#' colourTree(tested_tree)
 colourTree <- function(tree,
                        point_size = 1.5,
                        high = "#00c434",
@@ -262,8 +295,38 @@ colourTree <- function(tree,
 #' @importFrom dplyr select mutate
 #' @importFrom patchwork plot_layout
 #'
+#' @return an interactive ggplot object containing the hierarchical tree of clusters
+#' coloured by significance testing results, with corresponding heatmap and a scatterplot
+#' comparing significance whne testing using proportions to parent vs. absolute proportions
+#'
 #' @export
-
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' tested_tree <- testTree(clust_tree$clust_tree,
+#'                         exprs=exprs,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes,
+#'                         pos_class_name=NULL,
+#'                         subjects=NULL,
+#'                         paired = FALSE)
+#'
+#' plotInteractiveHeatmap(tested_tree,
+#'                        clust_med_df = clust_tree$median_freq,
+#'                        clusters=clusters)
 plotInteractiveHeatmap <- function(testedTree,
                                    clust_med_df,
                                    clusters,

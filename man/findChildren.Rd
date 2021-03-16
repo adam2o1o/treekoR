@@ -10,7 +10,8 @@ findChildren(tree)
 \item{tree}{a ggtree object}
 }
 \value{
-
+a ggtree object with the data containing a column with the clusters
+contained in each node
 }
 \description{
 Title

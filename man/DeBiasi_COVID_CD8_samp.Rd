@@ -3,21 +3,20 @@
 \docType{data}
 \name{DeBiasi_COVID_CD8_samp}
 \alias{DeBiasi_COVID_CD8_samp}
-\title{Arabidopsis QTL data on gravitropism}
+\title{COVID-19 Sample data}
 \format{
-An object of class \code{"cross"}; see \code{\link[qtl]{read.cross}}.
+An object of class \code{"SingeCellExperiment"}
 }
 \source{
-\href{https://phenome.jax.org/projects/Moore1b}{QTL Archive}
+\href{https://flowrepository.org/id/FR-FCM-Z2N5}{FlowRepository}
 }
 \usage{
 data(COVIDSampleData)
 }
 \description{
-Data from a QTL experiment on gravitropism in
-Arabidopsis, with data on 162 recombinant inbred lines (Ler x
-Cvi). The outcome is the root tip angle (in degrees) at two-minute
-increments over eight hours.
+Data from a an experiment investigating T cell compositions between COVID-19
+patients and healthy control. This data has been transformed using a arcsinh transform
+using a co-factor of 5 and randomly subsetted
 }
 \examples{
 data(COVIDSampleData)

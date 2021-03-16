@@ -40,6 +40,10 @@ The column names should also correspond to the labels you want to use}
 
 \item{metric_name}{legend title}
 }
+\value{
+an interactive ggplot graph object with heatmap of median cluster expressions
+ plotted alongside hierarchical tree
+}
 \description{
 a function to add a heatmap of cluster medians alongisde the phylogenetic tree
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualiseTree.R
 \name{colourTree}
 \alias{colourTree}
-\title{Title}
+\title{colourTree}
 \usage{
 colourTree(
   tree,
@@ -24,9 +24,38 @@ with p$data containing test statisic and p-}
 
 \item{mid}{colour for middle values}
 }
+\value{
+an interactive ggplot graph object, plotting the hierarchical tree of clusters with
+nodes and branches coloured by the significance testing results.
+}
 \description{
 Adding statistical test results onto the tree by using
 colourful nodes and branches
 Takes a ggtree object with test results for each node and returns
 a ggtree graph object
+}
+\examples{
+library(SingleCellExperiment)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_tree <- getClusterTree(exprs,
+                             clusters,
+                             hierarchy_method="hopach")
+
+tested_tree <- testTree(clust_tree$clust_tree,
+                        exprs=exprs,
+                        clusters=clusters,
+                        samples=samples,
+                        classes=classes,
+                        pos_class_name=NULL,
+                        subjects=NULL,
+                        paired = FALSE)
+
+colourTree(tested_tree)
 }

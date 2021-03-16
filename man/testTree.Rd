@@ -36,7 +36,7 @@ to identify matched samples in paired t-tests (not yet tested)}
 \item{paired}{a boolean indicating whether to performed paired t-tests (not yet tested)}
 }
 \value{
-
+a ggtree object with significance testing results in embedded data
 }
 \description{
 This function takes a hierarchical tree of the cluster
@@ -46,4 +46,27 @@ proportion of cluster relative to sample's n and proportion of cluster
 relative to sample's n of hierarchical parent cluster.
 Takes a ggtree object and returns a ggtree object with testing results
 appended in the data
+}
+\examples{
+library(SingleCellExperiment)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_tree <- getClusterTree(exprs,
+                             clusters,
+                             hierarchy_method="hopach")
+
+tested_tree <- testTree(clust_tree$clust_tree,
+                        exprs=exprs,
+                        clusters=clusters,
+                        samples=samples,
+                        classes=classes,
+                        pos_class_name=NULL,
+                        subjects=NULL,
+                        paired = FALSE)
 }

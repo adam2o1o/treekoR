@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyseTree.R
 \name{runHOPACH}
 \alias{runHOPACH}
-\title{Title}
+\title{runHOPACH}
 \usage{
 runHOPACH(data, K = 10, kmax = 5, dissimilarity_metric = "cor")
 }
@@ -18,8 +18,26 @@ node in the tree}
 \item{dissimilarity_metric}{metric used to calculate dissimilarities between clusters/cell types}
 }
 \value{
-
+a list containing the groups each cluster belongs to at each level of the hopach tree
 }
 \description{
-Title
+runHOPACH
+}
+\examples{
+library(SingleCellExperiment)
+library(data.table)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_med_dt <- as.data.table(exprs)
+clust_med_dt[, cluster_id := clusters]
+res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
+res2 <- res[,.SD, .SDcols = !c('cluster_id')]
+
+hopach_res <- runHOPACH(as.data.frame(scale(res2)))
 }

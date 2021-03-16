@@ -10,8 +10,28 @@ hopachToPhylo(res)
 \item{res}{an object returned from the runHOPACH() function}
 }
 \value{
-
+a phylogram converted from the outputted list from the runHOPACH function
 }
 \description{
 Title
+}
+\examples{
+library(SingleCellExperiment)
+library(data.table)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_med_dt <- as.data.table(exprs)
+clust_med_dt[, cluster_id := clusters]
+res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
+res2 <- res[,.SD, .SDcols = !c('cluster_id')]
+
+hopach_res <- runHOPACH(as.data.frame(scale(res2)))
+phylo <- hopachToPhylo(hopach_res)
+
 }

@@ -4,8 +4,19 @@ Title: Cytometry Cluster Hierarchy and Proportions to Parent
 Version: 0.1.0
 Author: Adam Chan
 Maintainer: Adam Chan <adam.s.chan@sydney.edu.au>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+biocViews: 
+	Clustering, DifferentialExpression, 
+	FlowCytometry, ImmunoOncology, MassSpectrometry,
+	SingleCell, Software, 
+	StatisticalMethod, Visualization
+Description: treekoR is a novel framework that aims to utilise the hierarchical 
+    nature of single cell cytometry data to find robust and interpretable associations 
+    between cell subsets and patient clinical end points. We developed treekoR to:
+    Derive a hierarchical tree structure of cell clusters; measure the proportions to parent 
+    (proportions of cells each node in the tree relative to the number of cells belonging its
+    parent node), in addition to the proportions to all (proportion of cells 
+    in each node relative to all cells); perform significance testing using the calculated 
+    proportions; and provide an interactive html visualisation to help highlight key results.
 Imports:
     tidyr,
     dplyr,
@@ -16,10 +27,11 @@ Imports:
     hopach,
     ape,
     ggtree,
-    patchwork
-License: What license is it under?
+    patchwork,
+    SingleCellExperiment
+License: GPL-3
 Encoding: UTF-8
-LazyData: true
+LazyData: false
 RoxygenNote: 7.1.1
 Suggests: 
     knitr,

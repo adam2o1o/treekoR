@@ -13,8 +13,36 @@ getTreeResults(testedTree, sort_by = "parent")
 p-values testing via absolute proportions. Values can can be c(NA, "parent", "all")}
 }
 \value{
-
+a dataframe with hierarchical tree nodes, corresponding clusters and
+corresponding significance testing results
 }
 \description{
 Title
+}
+\examples{
+library(SingleCellExperiment)
+data(COVIDSampleData)
+
+sce <- DeBiasi_COVID_CD8_samp
+exprs <- t(assay(sce, "exprs"))
+clusters <- colData(sce)$cluster_id
+classes <- colData(sce)$condition
+samples <- colData(sce)$sample_id
+
+clust_tree <- getClusterTree(exprs,
+                             clusters,
+                             hierarchy_method="hopach")
+
+tested_tree <- testTree(clust_tree$clust_tree,
+                        exprs=exprs,
+                        clusters=clusters,
+                        samples=samples,
+                        classes=classes,
+                        pos_class_name=NULL,
+                        subjects=NULL,
+                        paired = FALSE)
+
+res_df <- getTreeResults(tested_tree)
+
+head(res_df, 10)
 }
