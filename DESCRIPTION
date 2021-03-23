@@ -2,8 +2,9 @@ Package: treekoR
 Type: Package
 Title: Cytometry Cluster Hierarchy and Proportions to Parent
 Version: 0.99.1
-Author: Adam Chan
-Maintainer: Adam Chan <adam.s.chan@sydney.edu.au>
+Authors@R: c(person("Adam", "Chan", role = c("aut", "cre"),
+                     email = "adam.s.chan@sydney.edu.au"),
+             person("Ellis", "Patrick", role = "ctb"))
 biocViews: 
 	Clustering, DifferentialExpression, 
 	FlowCytometry, ImmunoOncology, MassSpectrometry,
@@ -18,6 +19,8 @@ Description: treekoR is a novel framework that aims to utilise the hierarchical
     in each node relative to all cells); perform significance testing using the calculated 
     proportions; and provide an interactive html visualisation to help highlight key results.
 Imports:
+    stats,
+    utils,
     tidyr,
     dplyr,
     magrittr,
