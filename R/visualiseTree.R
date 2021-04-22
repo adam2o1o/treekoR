@@ -57,10 +57,7 @@ addHeatMap <- function(p,
                        high = "#A50026",
                        colnames_angle = 90,
                        metric_name = "Column z-score") {
-
-
   tree_df <- p$data
-
   # Get x value for start of heatmap
   start_x <- max(tree_df$x, na.rm = TRUE) + offset
 
@@ -131,7 +128,9 @@ addFreqBars <- function(p,
   tree_df <- p$data
 
   # Get starting x value by getting all x values plotted in ggplot
-  start_x <- max(sapply(ggplot_build(p)$data, function(dat) if(!is.null(dat$x)) max(dat$x) else 0)) + offset
+  start_x <- max(vapply(ggplot_build(p)$data,
+                        function(dat) if(!is.null(dat$x)) max(dat$x) else 0,
+                        numeric(1))) + offset
 
   # Calculate frequency of each cluster
   cluster_freq_df <- data.frame(
@@ -221,7 +220,6 @@ colourTree <- function(tree,
                        high = "#00c434",
                        low = "purple",
                        mid="ivory2"){
-
 
   tree$data$label <- ifelse(is.na(tree$data$label),
                             tree$data$node,
@@ -360,17 +358,13 @@ plotInteractiveHeatmap <- function(testedTree,
                 bar_length = fb_bar_length, bar_width=fb_bar_width)
 
   max_val <- max(abs(c(testedTree$data$statAll, testedTree$data$statParent)))
-
   # Make label non-null using node
   testedTreeDat <- testedTree$data %>% # Use node name where label is null
     mutate(label = ifelse(is.na(label),node,label))
-
   # Insert tooltips
   scatter_tooltip <- paste0("<b>Cluster</b>: ", testedTreeDat$label,
                             "\n <b>p-value</b> (rel. to all)= ", signif(testedTreeDat$pvalAll, 2),
-                            "\n <b>p-value</b> (rel. to parent)= ", signif(testedTreeDat$pvalParent, 2)
-  )
-
+                            "\n <b>p-value</b> (rel. to parent)= ", signif(testedTreeDat$pvalParent, 2))
   # Plot scatterplot with parent vs. all proportions
   g1 <- ggplot(testedTree$data %>% # Use node name where label is null
                  mutate(label = ifelse(is.na(label),node,label)),
@@ -389,29 +383,14 @@ plotInteractiveHeatmap <- function(testedTree,
           axis.line = element_line(color = 'black'),
           legend.position = "top") +
     scale_color_manual(values=c("grey10", "grey50"))
-  # + xlim(-max(abs(c(gTree$data$statAll, gTree$data$statParent))), max(abs(c(gTree$data$statAll, gTree$data$statParent))))
-
-  hover_css <- "fill:cyan;
-              stroke:darkcyan;
-              r:4pt;"
-  tooltip_css <- "border-style: solid;
-                            border-color: #c3c3c3;
-                            border-radius: 8px;
-                            border-width: 0.5px;
-                            padding: 5px;
-                            box-shadow: 2px 2px 3px 0px #bbbbbb;
-                            background-color: white;
-                            font: menu;"
-
+  hover_css <- "fill:cyan; stroke:darkcyan; r:4pt;"
+  tooltip_css <- "border-style: solid; border-color: #c3c3c3; border-radius: 8px;
+                  border-width: 0.5px; padding: 5px;box-shadow: 2px 2px 3px 0px #bbbbbb;
+                  background-color: white; font: menu;"
   gf <-girafe(
-    print(gTree +
-            theme(legend.position = "top")+
-            g1 +
-            plot_layout(nrow = 1, widths = c(7, 4.5))),
+    print(gTree + theme(legend.position = "top") + g1 + plot_layout(nrow = 1, widths = c(7, 4.5))),
     width_svg=svg_width,
     height_svg=svg_height)
 
-  girafe_options(gf,
-                 opts_hover(css = hover_css),
-                 opts_tooltip(css = tooltip_css))
+  girafe_options(gf, opts_hover(css = hover_css), opts_tooltip(css = tooltip_css))
 }

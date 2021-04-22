@@ -38,7 +38,10 @@ suppressPackageStartupMessages({
 
 # Installation
 ```{r eval=F}
-
+# Install the development version from GitHub:
+# install.packages("devtools")
+devtools::install_github("adam2o1o/treekoR")
+library(treekoR)
 ```
 
 # Overview
@@ -90,7 +93,7 @@ clust_tree <- getClusterTree(exprs,
 Proportions of each cell cluster in the tree are calculated - both the proportion relative to all and proportion relative to the hierarchical parent. These proportions are used in a two sample t-test, testing for equal means between the patient clinical outcome using both types of proportions.
 
 ```{r}
-tested_tree <- testTree(clust_tree$clust_tree,
+tested_tree <- testTree(phylo=clust_tree$clust_tree,
                       exprs=exprs,
                       clusters=clusters,
                       samples=samples,
@@ -150,5 +153,16 @@ tested_tree <- testTree(clust_tree$clust_tree,
 plotInteractiveHeatmap(tested_tree,
                        clust_med_df = clust_tree$median_freq,
                        clusters=clusters)
+```
+
+
+### Extracting Proportions
+```{r}
+prop_df <- getCellProp(phylo=clust_tree$clust_tree,
+                       clusters=clusters,
+                       samples=samples,
+                       classes=classes)
+
+head(prop_df[,1:8])
 ```
 

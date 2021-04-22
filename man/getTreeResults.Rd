@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyseTree.R
 \name{getTreeResults}
 \alias{getTreeResults}
-\title{Title}
+\title{getTreeResults}
 \usage{
 getTreeResults(testedTree, sort_by = "parent")
 }
@@ -17,7 +17,7 @@ a dataframe with hierarchical tree nodes, corresponding clusters and
 corresponding significance testing results
 }
 \description{
-Title
+getTreeResults
 }
 \examples{
 library(SingleCellExperiment)

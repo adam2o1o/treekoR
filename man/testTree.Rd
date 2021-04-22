@@ -22,7 +22,8 @@ testTree(
 sample id, the subject id (needed for paired tests), and the group
 that the subject/sample belongs to}
 
-\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric).
+If numeric, cluster names need to be consecutive starting from 1.}
 
 \item{samples}{a vector identifying the patient each cell belongs to}
 

@@ -17,7 +17,7 @@ getClusterTree(
 \item{exprs}{a dataframe containing single cell expression data}
 
 \item{clusters}{a vector representing the cell type or cluster of each cell
-(can be character or numeric)}
+(can be character or numeric). If numeric, cluster names need to be consecutive starting from 1.}
 
 \item{hierarchy_method}{a string indicating the hierarchical tree construction
 method to be used}
