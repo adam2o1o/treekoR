@@ -269,9 +269,11 @@ colourTree <- function(tree,
   return(tree)
 }
 
-#' Title
+#' plotSigScatter
 #'
-#' @param treeDat
+#' @param testedTree an output from the function testTree()
+#' @param scatter_tooltip vector containing tooltips for interactive plot
+#' @param max_val maximum value to set as x/y axis limits
 #'
 #' @return a ggplot object, containing test statistics from testing proportions relative to parent against
 #' the test statistics from testing absolute proportions.
