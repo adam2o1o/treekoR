@@ -2,17 +2,21 @@
 % Please edit documentation in R/visualiseTree.R
 \name{plotSigScatter}
 \alias{plotSigScatter}
-\title{Title}
+\title{plotSigScatter}
 \usage{
 plotSigScatter(testedTree, scatter_tooltip, max_val)
 }
 \arguments{
-\item{treeDat}{}
+\item{testedTree}{an output from the function testTree()}
+
+\item{scatter_tooltip}{vector containing tooltips for interactive plot}
+
+\item{max_val}{maximum value to set as x/y axis limits}
 }
 \value{
 a ggplot object, containing test statistics from testing proportions relative to parent against
 the test statistics from testing absolute proportions.
 }
 \description{
-Title
+plotSigScatter
 }
