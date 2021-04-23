@@ -65,10 +65,12 @@ addHeatMap <- function(p,
   cluster_medians <- as.data.frame(scale(cluster_medians))
   rownames(cluster_medians) <- clust_rows
 
+  clust_med_tree_ind <- match(clust_rows, tree_df$label)
+
   # Create Heatmap Matrix using y values from tree and getting the x values
   heatmap_df <- cluster_medians %>%
-    dplyr::mutate(y = tree_df$y[match(rownames(cluster_medians), tree_df$label)],
-                  label = tree_df$label[match(rownames(cluster_medians), tree_df$label)]) %>%
+    dplyr::mutate(y = tree_df$y[clust_med_tree_ind],
+                  label = tree_df$label[clust_med_tree_ind]) %>%
     tidyr::gather(variable, value, -c(y,label)) %>%
     dplyr::mutate(x = start_x + as.numeric(as.factor(.$variable))*width)
 
@@ -124,7 +126,6 @@ addFreqBars <- function(p,
                         bar_width=0.4,
                         freq_labels = FALSE) {
 
-
   tree_df <- p$data
 
   # Get starting x value by getting all x values plotted in ggplot
@@ -138,15 +139,19 @@ addFreqBars <- function(p,
     cluster = names(table(clusters))
   )
 
+  clust_med_tree_ind <- match(cluster_freq_df$cluster, tree_df$label)
+  clust_med_tree_y <- tree_df$y[clust_med_tree_ind]
+
   # Add dimensions for bars
   cluster_freq_df <- cluster_freq_df %>%
-    dplyr::mutate(y = tree_df$y[match(cluster_freq_df$cluster, tree_df$label)],
-                  ymin = tree_df$y[match(cluster_freq_df$cluster, tree_df$label)] - bar_width,
-                  ymax = tree_df$y[match(cluster_freq_df$cluster, tree_df$label)] + bar_width,
+    dplyr::mutate(y = clust_med_tree_y,
+                  ymin = clust_med_tree_y - bar_width,
+                  ymax = clust_med_tree_y + bar_width,
                   xmin = start_x,
-                  xmax = start_x + bar_length * cluster_freq_df$freq / max(cluster_freq_df$freq)) %>%
-    dplyr::mutate(x = max(xmax) + 0.5) %>%
-    dplyr::mutate(freq_label = paste0(round(100*freq/sum(freq), 2), "% (", freq, ")"))
+                  xmax = start_x + bar_length * freq / max(freq)) %>%
+    dplyr::mutate(x_label = max(xmax) + 0.5) %>%
+    dplyr::mutate(freq_label = paste0(round(100*freq/sum(freq), 2), "% (", freq, ")")) %>%
+    dplyr::filter(!is.na(y)) # Remove data for clusters that may be in the clusters factor levels, but not present in exprs
 
   # Add Tooltips
   bar_tooltip <- paste0("<b>Cluster</b>: ", cluster_freq_df$cluster,
@@ -161,7 +166,7 @@ addFreqBars <- function(p,
   if (freq_labels) {
     p2 <- p2 +
       geom_text(data = cluster_freq_df,
-                aes(x=x, y=y, label= freq_label),
+                aes(x=x_label, y=y, label= freq_label),
                 size=1.75,
                 hjust=0)
   }
@@ -254,6 +259,32 @@ colourTree <- function(tree,
 
   return(tree)
 }
+
+#' Title
+#'
+#' @param treeDat
+#'
+#' @return a ggplot object, containing test statistics from testing proportions relative to parent against
+#' the test statistics from testing absolute proportions.
+plotSigScatter <- function(testedTree) {
+  ggplot(testedTree,
+         aes(x = statAll, y = statParent, shape=isTip, col=isTip,
+             data_id=label,
+             tooltip = scatter_tooltip))+
+    geom_point_interactive() +
+    # geom_point(size=1.5)+
+    geom_hline(yintercept = 0, linetype="dashed")+
+    geom_vline(xintercept = 0, linetype="dashed")+
+    coord_equal(xlim=c(-max_val,max_val),ylim=c(-max_val,max_val))+
+    labs(x = "Statistic: Relative to all",y = "Statistic: Relative to parent",
+         title = "Significance between patient condition using prop. to parent vs prop. to all") +
+    theme_bw() +
+    theme(panel.border = element_blank(),
+          axis.line = element_line(color = 'black'),
+          legend.position = "top") +
+    scale_color_manual(values=c("grey10", "grey50"))
+}
+
 
 #' Title
 #' @description This function takes a hierarchical tree which has been
@@ -360,34 +391,19 @@ plotInteractiveHeatmap <- function(testedTree,
   max_val <- max(abs(c(testedTree$data$statAll, testedTree$data$statParent)))
   # Make label non-null using node
   testedTreeDat <- testedTree$data %>% # Use node name where label is null
-    mutate(label = ifelse(is.na(label),node,label))
+    dplyr::mutate(label = ifelse(is.na(label),node,label))
   # Insert tooltips
   scatter_tooltip <- paste0("<b>Cluster</b>: ", testedTreeDat$label,
                             "\n <b>p-value</b> (rel. to all)= ", signif(testedTreeDat$pvalAll, 2),
                             "\n <b>p-value</b> (rel. to parent)= ", signif(testedTreeDat$pvalParent, 2))
   # Plot scatterplot with parent vs. all proportions
-  g1 <- ggplot(testedTree$data %>% # Use node name where label is null
-                 mutate(label = ifelse(is.na(label),node,label)),
-               aes(x = statAll, y = statParent, shape=isTip, col=isTip,
-                   data_id=label,
-                   tooltip = scatter_tooltip))+
-    geom_point_interactive() +
-    # geom_point(size=1.5)+
-    geom_hline(yintercept = 0, linetype="dashed")+
-    geom_vline(xintercept = 0, linetype="dashed")+
-    coord_equal(xlim=c(-max_val,max_val),ylim=c(-max_val,max_val))+
-    labs(x = "Statistic: Relative to all",y = "Statistic: Relative to parent",
-         title = "Significance between patient condition using prop. to parent vs prop. to all") +
-    theme_bw() +
-    theme(panel.border = element_blank(),
-          axis.line = element_line(color = 'black'),
-          legend.position = "top") +
-    scale_color_manual(values=c("grey10", "grey50"))
+  g1 <- plotSigScatter(testedTreeDat)
+
   hover_css <- "fill:cyan; stroke:darkcyan; r:4pt;"
   tooltip_css <- "border-style: solid; border-color: #c3c3c3; border-radius: 8px;
                   border-width: 0.5px; padding: 5px;box-shadow: 2px 2px 3px 0px #bbbbbb;
                   background-color: white; font: menu;"
-  gf <-girafe(
+  gf <- girafe(
     print(gTree + theme(legend.position = "top") + g1 + plot_layout(nrow = 1, widths = c(7, 4.5))),
     width_svg=svg_width,
     height_svg=svg_height)

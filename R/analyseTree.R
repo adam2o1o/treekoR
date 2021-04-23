@@ -105,14 +105,16 @@ hopachToPhylo <- function(res) {
   # phylogenetic tree
   # ------------------------------------------------------------
   for (i in rev(seq_len(ncol(cutree_list_df)-1))) {
+    cur_lev_nodes <- as.vector(cutree_list_df[,i])
+    cur_lev_n_t <- table(cur_lev_nodes)
     # Get parent nodes with more than two children
-    unique_nodes <- names(table(cutree_list_df[,i])[which(table(cutree_list_df[,i]) >= 2)])
+    unique_nodes <- names(cur_lev_n_t[which(cur_lev_n_t >= 2)])
     # For each parent node, we combine the corresponding children nodes
     for (node in unique_nodes) {
-      base_nodes_combo <- base_nodes[which(as.vector(cutree_list_df[,i])== node)]
-
-      if (sum(grepl(paste(base_nodes_combo, collapse="|"), current_nodes)) > 1) {
-        nodes_to_combine <- current_nodes[grepl(paste(base_nodes_combo, collapse="|"), current_nodes)]
+      base_nodes_combo <- base_nodes[which(cur_lev_nodes== node)]
+      base_nodes_rgx_s <- paste(base_nodes_combo, collapse="|")
+      if (sum(grepl(base_nodes_rgx_s, current_nodes)) > 1) {
+        nodes_to_combine <- current_nodes[grepl(base_nodes_rgx_s, current_nodes)]
 
         current_nodes <- c(current_nodes[!current_nodes %in% nodes_to_combine],
                            paste0("(", paste(nodes_to_combine, collapse=","), ")")
@@ -120,7 +122,6 @@ hopachToPhylo <- function(res) {
       }
     }
   }
-
   tree_string <- paste0(gsub("<|>", "", current_nodes), ";")
   # Conver tree string into a phylo object
   tree <- read.tree(text = tree_string)

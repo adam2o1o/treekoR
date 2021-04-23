@@ -157,6 +157,7 @@ plotInteractiveHeatmap(tested_tree,
 
 
 ### Extracting Proportions
+Return a dataframe containig the absolute proportions and proportions to parent for each cell type for each sample. These proportions can then be used for visualisation or as input into further analyses.
 ```{r}
 prop_df <- getCellProp(phylo=clust_tree$clust_tree,
                        clusters=clusters,
