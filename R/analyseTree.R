@@ -1,14 +1,17 @@
 #' runHOPACH
 #'
-#' @param data dataframe containing the median expression of the clusters/cell types
-#' @param K  positive integer specifying the maximum number of levels in the tree. Must be
-#' 15 or less, due to computational limitations (overflow)
-#' @param kmax integer between 1 and 9 specifying the maximum number of children at each
-#' node in the tree
-#' @param dissimilarity_metric metric used to calculate dissimilarities between clusters/cell types
+#' @param data dataframe containing the median expression of the clusters/cell
+#' types
+#' @param K  positive integer specifying the maximum number of levels in the
+#' tree. Must be 15 or less, due to computational limitations (overflow)
+#' @param kmax integer between 1 and 9 specifying the maximum number of children
+#' at each node in the tree
+#' @param dissimilarity_metric metric used to calculate dissimilarities
+#' between clusters/cell types
 #'
 #' @import hopach
-#' @return a list containing the groups each cluster belongs to at each level of the hopach tree
+#' @return a list containing the groups each cluster belongs to at each level of
+#' the hopach tree
 #'
 #' @examples
 #' library(SingleCellExperiment)
@@ -68,7 +71,8 @@ runHOPACH <- function(data, K = 10, kmax = 5, dissimilarity_metric = "cor") {
 #' @param res an object returned from the runHOPACH() function
 #'
 #' @importFrom ape read.tree
-#' @return a phylogram converted from the outputted list from the runHOPACH function
+#' @return a phylogram converted from the outputted list from the runHOPACH
+#' function
 #' @examples
 #' library(SingleCellExperiment)
 #' library(data.table)
@@ -135,7 +139,8 @@ hopachToPhylo <- function(res) {
 #'
 #' @param exprs a dataframe containing single cell expression data
 #' @param clusters a vector representing the cell type or cluster of each cell
-#' (can be character or numeric). If numeric, cluster names need to be consecutive starting from 1.
+#' (can be character or numeric). If numeric, cluster names need to be consecutive
+#' starting from 1.
 #' @param hierarchy_method a string indicating the hierarchical tree construction
 #'  method to be used
 #' @param hopach_kmax integer between 1 and 9 specifying the maximum number of
@@ -238,13 +243,12 @@ findChildren <- function(tree) {
 #' Takes a ggtree object and returns a ggtree object with testing results
 #' appended in the data
 #'
-#' @param paired a boolean indicating whether to performed paired t-tests (not yet tested)
+#' @param paired a boolean indicating whether to performed paired t-tests
+#' (not yet tested)
 #' @param phylo a ggtree object
-#' @param exprs a dataframe containing the clusters for each cell, the
-#' sample id, the subject id (needed for paired tests), and the group
-#' that the subject/sample belongs to
-#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric).
-#' If numeric, cluster names need to be consecutive starting from 1.
+#' @param clusters a vector representing the cell type or cluster of each cell
+#' (can be character or numeric). If numeric, cluster names need to be consecutive
+#' starting from 1.
 #' @param classes a vector containing the patient outcome/class each cell belongs to
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param pos_class_name a character indicating which class is positive
@@ -271,7 +275,6 @@ findChildren <- function(tree) {
 #'                              hierarchy_method="hopach")
 #'
 #' tested_tree <- testTree(clust_tree$clust_tree,
-#'                         exprs=exprs,
 #'                         clusters=clusters,
 #'                         samples=samples,
 #'                         classes=classes,
@@ -279,26 +282,35 @@ findChildren <- function(tree) {
 #'                         subjects=NULL,
 #'                         paired = FALSE)
 testTree <- function(phylo,
-                     exprs,
                      clusters,
                      samples,
                      classes,
                      pos_class_name=NULL,
                      subjects=NULL,
                      paired = FALSE){
+  if (!is.null(pos_class_name)) {
+    if (!pos_class_name %in% unique(classes)) {
+      stop("'pos_class_name' needs to be in classes")
+    }
+  }
+  if (length(unique(classes)) > 2) {
+    stop("length(unique(classes)) > 2.
+         treekoR can currently only test between two classes.")
+  }
   t <- findChildren(ggtree(phylo, branch.length="none"))
   td <- t$data
   if(paired == TRUE){
     samp2Group <- unique(data.frame(subjects, samples, classes))
-    samp2Group <- samp2Group[samp2Group$subjects%in%names(which(table(samp2Group$subjects)==2)),]
+    samp2Group <- samp2Group[samp2Group$subjects %in%
+                               names(which(table(samp2Group$subjects)==2)),]
     ### Put catch error in here
     groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
     groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
   } else {
     if (is.null(pos_class_name)) {
       pos_class_name <- unique(classes)[1]
-      neg_class_name <- unique(classes)[2] }
-    else {
+      neg_class_name <- unique(classes)[2]
+      } else {
       neg_class_name <- unique(classes)[unique(classes) != pos_class_name]
       }
     samp2Group <- unique(data.frame(samples, classes))
@@ -329,17 +341,21 @@ testTree <- function(phylo,
       pvalParent[i] <- testParent$p.value
     }
   }
-  td[, c("statAll", "statParent", "pvalAll", "pvalParent")] <- data.frame(statAll, statParent, pvalAll, pvalParent)
+  td[, c("statAll", "statParent", "pvalAll", "pvalParent")] <-
+    data.frame(statAll, statParent, pvalAll, pvalParent)
   t$data <- td
   return(t)
 }
 
 #' getCellProp
 #'
-#' @param phylo a phylogram with tip.labels corresponding to cell types/cluster contained in 'clusters' vector
-#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric).
-#' If numeric, cluster names need to be consecutive starting from 1.
+#' @param phylo a phylogram with tip.labels corresponding to cell types/cluster
+#' contained in 'clusters' vector
+#' @param clusters a vector representing the cell type or cluster of each
+#' cell (can be character or numeric). If numeric, cluster names need to be
+#' consecutive starting from 1.
 #' @param samples a vector identifying the patient each cell belongs to
+#' @param classes a vector containing the patient outcome/class each cell belongs to
 #'
 #' @return a dataframe containing proportions calculated for each sample
 #' @export
@@ -374,23 +390,27 @@ getCellProp <- function(phylo,
 
   # Get dataframe of parent proportions
   prop_par <- data.frame(mapply(function(x,y) {
-    tapply(clusters %in% unlist(x), samples, sum)/tapply(clusters %in% unlist(y), samples, sum)
+    tapply(clusters %in% unlist(x),
+           samples, sum) /tapply(clusters %in% unlist(y), samples, sum)
   }, td$clusters, td$parentClusters))
 
-  colnames(prop_par) <- paste0("prop_parent_", ifelse(is.na(td$label), td$node, td$label))
+  colnames(prop_par) <- paste0("prop_parent_", ifelse(is.na(td$label),
+                                                      td$node, td$label))
 
   # Get dataframe of absolute proportions
   prop_all <- data.frame(mapply(function(x) {
     tapply(clusters %in% unlist(x), samples, sum)/table(samples)
   }, td$clusters))
 
-  colnames(prop_all) <- paste0("prop_all_", ifelse(is.na(td$label), td$node, td$label))
+  colnames(prop_all) <- paste0("prop_all_", ifelse(is.na(td$label),
+                                                   td$node, td$label))
 
   # Mapping from sample to class outcome
   samp_class <- unique(cbind(as.character(samples), as.character(classes)))
 
   prop_df <- cbind(data.frame(sample = names(table(samples)),
-                              class = samp_class[,2][match(names(table(samples)), samp_class[,1])]),
+                              class = samp_class[,2][match(names(table(samples)),
+                                                           samp_class[,1])]),
                    prop_all,
                    prop_par)
 
@@ -422,7 +442,6 @@ getCellProp <- function(phylo,
 #'                              hierarchy_method="hopach")
 #'
 #' tested_tree <- testTree(clust_tree$clust_tree,
-#'                         exprs=exprs,
 #'                         clusters=clusters,
 #'                         samples=samples,
 #'                         classes=classes,
@@ -435,6 +454,10 @@ getCellProp <- function(phylo,
 #' head(res_df, 10)
 getTreeResults <- function(testedTree,
                            sort_by = "parent"){
+  if (!sort_by %in% c("parent", "all")) {
+    stop("'sort_by' must be 'parent' or 'all'")
+    }
+
   res <- as.data.frame(testedTree$data[,c(
     "parent", "node", "isTip",
     "clusters", "statAll", "statParent",

@@ -6,7 +6,6 @@
 \usage{
 testTree(
   phylo,
-  exprs,
   clusters,
   samples,
   classes,
@@ -18,12 +17,9 @@ testTree(
 \arguments{
 \item{phylo}{a ggtree object}
 
-\item{exprs}{a dataframe containing the clusters for each cell, the
-sample id, the subject id (needed for paired tests), and the group
-that the subject/sample belongs to}
-
-\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric).
-If numeric, cluster names need to be consecutive starting from 1.}
+\item{clusters}{a vector representing the cell type or cluster of each cell
+(can be character or numeric). If numeric, cluster names need to be consecutive
+starting from 1.}
 
 \item{samples}{a vector identifying the patient each cell belongs to}
 
@@ -34,7 +30,8 @@ If numeric, cluster names need to be consecutive starting from 1.}
 \item{subjects}{a vector containing which subject the cell belongs to, used
 to identify matched samples in paired t-tests (not yet tested)}
 
-\item{paired}{a boolean indicating whether to performed paired t-tests (not yet tested)}
+\item{paired}{a boolean indicating whether to performed paired t-tests
+(not yet tested)}
 }
 \value{
 a ggtree object with significance testing results in embedded data
@@ -63,7 +60,6 @@ clust_tree <- getClusterTree(exprs,
                              hierarchy_method="hopach")
 
 tested_tree <- testTree(clust_tree$clust_tree,
-                        exprs=exprs,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,

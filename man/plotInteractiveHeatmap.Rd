@@ -32,10 +32,12 @@ plotInteractiveHeatmap(
 \item{testedTree}{a ggtree object that has been run through the testTree}
 
 \item{clust_med_df}{a dataframe with the cluster medians.
-The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
-The column names should also correspond to the labels you want to use}
+The rownumbers of the clusters median data frame should correspond to the
+nodes in the phylo tree. The column names should also correspond to the
+labels you want to use}
 
-\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric)}
+\item{clusters}{a vector representing the cell type or cluster of each cell
+(can be character or numeric)}
 
 \item{svg_width}{width of svg canvas}
 
@@ -47,14 +49,14 @@ The column names should also correspond to the labels you want to use}
 
 \item{tr_point_size}{size of each node in the tree}
 
-\item{tr_col_high}{colour used for high test statistics, coloured on the nodes and branches
-of the tree}
+\item{tr_col_high}{colour used for high test statistics, coloured on the nodes
+and branches of the tree}
 
-\item{tr_col_low}{colour used for low test statistics, coloured on the nodes and branches
-of the tree}
+\item{tr_col_low}{colour used for low test statistics, coloured on the nodes
+and branches of the tree}
 
-\item{tr_col_mid}{colour used for medium test statistics, coloured on the nodes and branches
-of the tree}
+\item{tr_col_mid}{colour used for medium test statistics, coloured on the nodes
+and branches of the tree}
 
 \item{hm_offset}{distance between the tree and the heatmap}
 
@@ -100,7 +102,6 @@ clust_tree <- getClusterTree(exprs,
                              hierarchy_method="hopach")
 
 tested_tree <- testTree(clust_tree$clust_tree,
-                        exprs=exprs,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,

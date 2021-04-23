@@ -16,9 +16,10 @@ addTree(p, offset = 0.3, font_size = 2.5, hjust = 0)
 \item{hjust}{horizontal justification as defined in ggplot2}
 }
 \value{
-a ggtree graph object with the hierarchical tree of clusters and corresponding labels
+a ggtree graph object with the hierarchical tree of clusters and
+corresponding labels
 }
 \description{
-a function to create a skeleton tree diagram to display significance
-testing results on each node
+a function to create a skeleton tree diagram to display
+significance testing results on each node
 }

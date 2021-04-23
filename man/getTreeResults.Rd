@@ -34,7 +34,6 @@ clust_tree <- getClusterTree(exprs,
                              hierarchy_method="hopach")
 
 tested_tree <- testTree(clust_tree$clust_tree,
-                        exprs=exprs,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,

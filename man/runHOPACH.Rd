@@ -7,18 +7,21 @@
 runHOPACH(data, K = 10, kmax = 5, dissimilarity_metric = "cor")
 }
 \arguments{
-\item{data}{dataframe containing the median expression of the clusters/cell types}
+\item{data}{dataframe containing the median expression of the clusters/cell
+types}
 
-\item{K}{positive integer specifying the maximum number of levels in the tree. Must be
-15 or less, due to computational limitations (overflow)}
+\item{K}{positive integer specifying the maximum number of levels in the
+tree. Must be 15 or less, due to computational limitations (overflow)}
 
-\item{kmax}{integer between 1 and 9 specifying the maximum number of children at each
-node in the tree}
+\item{kmax}{integer between 1 and 9 specifying the maximum number of children
+at each node in the tree}
 
-\item{dissimilarity_metric}{metric used to calculate dissimilarities between clusters/cell types}
+\item{dissimilarity_metric}{metric used to calculate dissimilarities
+between clusters/cell types}
 }
 \value{
-a list containing the groups each cluster belongs to at each level of the hopach tree
+a list containing the groups each cluster belongs to at each level of
+the hopach tree
 }
 \description{
 runHOPACH

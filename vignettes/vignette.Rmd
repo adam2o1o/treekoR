@@ -94,7 +94,6 @@ Proportions of each cell cluster in the tree are calculated - both the proportio
 
 ```{r}
 tested_tree <- testTree(phylo=clust_tree$clust_tree,
-                      exprs=exprs,
                       clusters=clusters,
                       samples=samples,
                       classes=classes,
@@ -142,7 +141,6 @@ clust_tree <- getClusterTree(exprs,
                              hierarchy_method="average")
 
 tested_tree <- testTree(clust_tree$clust_tree,
-                      exprs=exprs,
                       clusters=clusters,
                       samples=samples,
                       classes=classes,

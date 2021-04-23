@@ -1,6 +1,6 @@
 #' Title
-#' @description a function to create a skeleton tree diagram to display significance
-#' testing results on each node
+#' @description a function to create a skeleton tree diagram to display
+#' significance testing results on each node
 #'
 #' @param offset distance between leaf nodes on the tree and their labels
 #' @param font_size font size of leaf labels
@@ -8,7 +8,8 @@
 #' @param p a phylogenetic tree plot created from the ggtree() function
 #'
 #' @importFrom ggtree geom_tiplab
-#' @return a ggtree graph object with the hierarchical tree of clusters and corresponding labels
+#' @return a ggtree graph object with the hierarchical tree of clusters and
+#' corresponding labels
 addTree <- function(p,
                     offset = 0.3,
                     font_size = 2.5,
@@ -28,12 +29,14 @@ addTree <- function(p,
 }
 
 #' Title
-#' @description a function to add a heatmap of cluster medians alongisde the phylogenetic tree
+#' @description a function to add a heatmap of cluster medians alongisde the
+#' phylogenetic tree
 #'
 #' @param p a phylogenetic tree plot created from the ggtree() function
 #' @param cluster_medians a dataframe with the cluster medians.
-#' The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
-#' The column names should also correspond to the labels you want to use
+#' The rownumbers of the clusters median data frame should correspond to the
+#' nodes in the phylo tree. The column names should also correspond to the labels
+#' you want to use
 #' @param offset the distance between the tree plot and heatmap
 #' @param width width of each tile in the heatmap
 #' @param expand_y_lim white space below heatmap
@@ -45,8 +48,8 @@ addTree <- function(p,
 #'
 #' @import ggiraph
 #' @import ggplot2
-#' @return an interactive ggplot graph object with heatmap of median cluster expressions
-#'  plotted alongside hierarchical tree
+#' @return an interactive ggplot graph object with heatmap of median cluster
+#' expressions plotted alongside hierarchical tree
 addHeatMap <- function(p,
                        cluster_medians,
                        offset = 0.5,
@@ -88,7 +91,9 @@ addHeatMap <- function(p,
   p2 <- p +
     geom_tile_interactive(data = heatmap_df,
                           aes(x=x, y=y,
-                              fill = ifelse(abs(value)>3.5, sign(value)*3.5, value), tooltip=tile_tooltip),
+                              fill = ifelse(abs(value)>3.5,
+                                            sign(value)*3.5, value),
+                              tooltip=tile_tooltip),
                           width = width,
                           inherit.aes = FALSE) +
     scale_fill_gradient2(low = low,
@@ -110,15 +115,17 @@ addHeatMap <- function(p,
 #' Title
 #' @description a function to add the frequency bars for each cluster
 #'
-#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric)
+#' @param clusters a vector representing the cell type or cluster of
+#' each cell (can be character or numeric)
 #' @param offset distance between the heatmap and frequency bars
 #' @param bar_length length of bar with max frequency
 #' @param bar_width width of each frequency bar
-#' @param freq_labels boolean indicated whether or not to show frequency bar labels
+#' @param freq_labels boolean indicated whether or not to show frequency
+#' bar labels
 #' @param p a phylogenetic tree plot created from the ggtree() function
 #'
-#' @return an interactive ggplot graph object with frequency bars of clusters alongside
-#' heatmap of cluster median expression
+#' @return an interactive ggplot graph object with frequency bars of clusters
+#' alongside heatmap of cluster median expression
 addFreqBars <- function(p,
                         clusters,
                         offset = 0.75,
@@ -150,8 +157,11 @@ addFreqBars <- function(p,
                   xmin = start_x,
                   xmax = start_x + bar_length * freq / max(freq)) %>%
     dplyr::mutate(x_label = max(xmax) + 0.5) %>%
-    dplyr::mutate(freq_label = paste0(round(100*freq/sum(freq), 2), "% (", freq, ")")) %>%
-    dplyr::filter(!is.na(y)) # Remove data for clusters that may be in the clusters factor levels, but not present in exprs
+    dplyr::mutate(freq_label = paste0(round(100*freq/sum(freq), 2),
+                                      "% (", freq, ")")) %>%
+    # Remove data for clusters that may be in the clusters factor levels,
+    # but not present in exprs
+    dplyr::filter(!is.na(y))
 
   # Add Tooltips
   bar_tooltip <- paste0("<b>Cluster</b>: ", cluster_freq_df$cluster,
@@ -191,8 +201,8 @@ addFreqBars <- function(p,
 #'
 #' @importFrom utils modifyList
 #'
-#' @return an interactive ggplot graph object, plotting the hierarchical tree of clusters with
-#' nodes and branches coloured by the significance testing results.
+#' @return an interactive ggplot graph object, plotting the hierarchical
+#' tree of clusters with nodes and branches coloured by the significance testing results.
 #'
 #' @export
 #'
@@ -211,7 +221,6 @@ addFreqBars <- function(p,
 #'                              hierarchy_method="hopach")
 #'
 #' tested_tree <- testTree(clust_tree$clust_tree,
-#'                         exprs=exprs,
 #'                         clusters=clusters,
 #'                         samples=samples,
 #'                         classes=classes,
@@ -266,7 +275,9 @@ colourTree <- function(tree,
 #'
 #' @return a ggplot object, containing test statistics from testing proportions relative to parent against
 #' the test statistics from testing absolute proportions.
-plotSigScatter <- function(testedTree) {
+plotSigScatter <- function(testedTree,
+                           scatter_tooltip,
+                           max_val) {
   ggplot(testedTree,
          aes(x = statAll, y = statParent, shape=isTip, col=isTip,
              data_id=label,
@@ -292,20 +303,22 @@ plotSigScatter <- function(testedTree) {
 #'
 #' @param testedTree a ggtree object that has been run through the testTree
 #' @param clust_med_df a dataframe with the cluster medians.
-#' The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
-#' The column names should also correspond to the labels you want to use
-#' @param clusters a vector representing the cell type or cluster of each cell (can be character or numeric)
+#' The rownumbers of the clusters median data frame should correspond to the
+#' nodes in the phylo tree. The column names should also correspond to the
+#' labels you want to use
+#' @param clusters a vector representing the cell type or cluster of each cell
+#' (can be character or numeric)
 #' @param svg_width width of svg canvas
 #' @param svg_height height of svf canvas
 #' @param tr_offset distance between leaf nodes on the tree and their labels
 #' @param tr_font_size font size of leaf labels
 #' @param tr_point_size size of each node in the tree
-#' @param tr_col_high colour used for high test statistics, coloured on the nodes and branches
-#' of the tree
-#' @param tr_col_low colour used for low test statistics, coloured on the nodes and branches
-#' of the tree
-#' @param tr_col_mid colour used for medium test statistics, coloured on the nodes and branches
-#' of the tree
+#' @param tr_col_high colour used for high test statistics, coloured on the nodes
+#' and branches of the tree
+#' @param tr_col_low colour used for low test statistics, coloured on the nodes
+#' and branches of the tree
+#' @param tr_col_mid colour used for medium test statistics, coloured on the nodes
+#' and branches of the tree
 #' @param hm_offset distance between the tree and the heatmap
 #' @param hm_tile_width width of each tile in the heatmap
 #' @param hm_expand_y_lim white space below heatmap
@@ -345,7 +358,6 @@ plotSigScatter <- function(testedTree) {
 #'                              hierarchy_method="hopach")
 #'
 #' tested_tree <- testTree(clust_tree$clust_tree,
-#'                         exprs=exprs,
 #'                         clusters=clusters,
 #'                         samples=samples,
 #'                         classes=classes,
@@ -377,6 +389,10 @@ plotInteractiveHeatmap <- function(testedTree,
                                    fb_bar_length = 3,
                                    fb_bar_width=0.4,
                                    fb_freq_labels = FALSE) {
+  # Make label non-null using node
+  testedTreeDat <- testedTree$data %>% # Use node name where label is null
+    dplyr::mutate(label = ifelse(is.na(label),node,label))
+
   # Plot heatmap with tree results
   gTree <- testedTree %>%
     colourTree(high = tr_col_high, low = tr_col_low, mid=tr_col_mid,
@@ -388,16 +404,18 @@ plotInteractiveHeatmap <- function(testedTree,
     addFreqBars(clusters=clusters, offset = fb_offset,
                 bar_length = fb_bar_length, bar_width=fb_bar_width)
 
-  max_val <- max(abs(c(testedTree$data$statAll, testedTree$data$statParent)))
-  # Make label non-null using node
-  testedTreeDat <- testedTree$data %>% # Use node name where label is null
-    dplyr::mutate(label = ifelse(is.na(label),node,label))
+  max_val <- max(abs(c(testedTreeDat$statAll, testedTreeDat$statParent)))
+
   # Insert tooltips
   scatter_tooltip <- paste0("<b>Cluster</b>: ", testedTreeDat$label,
-                            "\n <b>p-value</b> (rel. to all)= ", signif(testedTreeDat$pvalAll, 2),
-                            "\n <b>p-value</b> (rel. to parent)= ", signif(testedTreeDat$pvalParent, 2))
+                            "\n <b>p-value</b> (rel. to all)= ",
+                            signif(testedTreeDat$pvalAll, 2),
+                            "\n <b>p-value</b> (rel. to parent)= ",
+                            signif(testedTreeDat$pvalParent, 2))
   # Plot scatterplot with parent vs. all proportions
-  g1 <- plotSigScatter(testedTreeDat)
+  g1 <- plotSigScatter(testedTreeDat,
+                       scatter_tooltip=scatter_tooltip,
+                       max_val=max_val)
 
   hover_css <- "fill:cyan; stroke:darkcyan; r:4pt;"
   tooltip_css <- "border-style: solid; border-color: #c3c3c3; border-radius: 8px;

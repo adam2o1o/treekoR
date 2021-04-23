@@ -10,7 +10,8 @@ hopachToPhylo(res)
 \item{res}{an object returned from the runHOPACH() function}
 }
 \value{
-a phylogram converted from the outputted list from the runHOPACH function
+a phylogram converted from the outputted list from the runHOPACH
+function
 }
 \description{
 Title

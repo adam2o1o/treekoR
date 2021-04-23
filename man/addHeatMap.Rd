@@ -21,8 +21,9 @@ addHeatMap(
 \item{p}{a phylogenetic tree plot created from the ggtree() function}
 
 \item{cluster_medians}{a dataframe with the cluster medians.
-The rownumbers of the clusters median data frame should correspond to the nodes in the phylo tree.
-The column names should also correspond to the labels you want to use}
+The rownumbers of the clusters median data frame should correspond to the
+nodes in the phylo tree. The column names should also correspond to the labels
+you want to use}
 
 \item{offset}{the distance between the tree plot and heatmap}
 
@@ -41,9 +42,10 @@ The column names should also correspond to the labels you want to use}
 \item{metric_name}{legend title}
 }
 \value{
-an interactive ggplot graph object with heatmap of median cluster expressions
- plotted alongside hierarchical tree
+an interactive ggplot graph object with heatmap of median cluster
+expressions plotted alongside hierarchical tree
 }
 \description{
-a function to add a heatmap of cluster medians alongisde the phylogenetic tree
+a function to add a heatmap of cluster medians alongisde the
+phylogenetic tree
 }

@@ -7,12 +7,16 @@
 getCellProp(phylo, clusters, samples, classes)
 }
 \arguments{
-\item{phylo}{a phylogram with tip.labels corresponding to cell types/cluster contained in 'clusters' vector}
+\item{phylo}{a phylogram with tip.labels corresponding to cell types/cluster
+contained in 'clusters' vector}
 
-\item{clusters}{a vector representing the cell type or cluster of each cell (can be character or numeric).
-If numeric, cluster names need to be consecutive starting from 1.}
+\item{clusters}{a vector representing the cell type or cluster of each
+cell (can be character or numeric). If numeric, cluster names need to be
+consecutive starting from 1.}
 
 \item{samples}{a vector identifying the patient each cell belongs to}
+
+\item{classes}{a vector containing the patient outcome/class each cell belongs to}
 }
 \value{
 a dataframe containing proportions calculated for each sample

@@ -25,8 +25,8 @@ with p$data containing test statisic and p-}
 \item{mid}{colour for middle values}
 }
 \value{
-an interactive ggplot graph object, plotting the hierarchical tree of clusters with
-nodes and branches coloured by the significance testing results.
+an interactive ggplot graph object, plotting the hierarchical
+tree of clusters with nodes and branches coloured by the significance testing results.
 }
 \description{
 Adding statistical test results onto the tree by using
@@ -49,7 +49,6 @@ clust_tree <- getClusterTree(exprs,
                              hierarchy_method="hopach")
 
 tested_tree <- testTree(clust_tree$clust_tree,
-                        exprs=exprs,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,
