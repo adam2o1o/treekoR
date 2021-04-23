@@ -1,7 +1,7 @@
 Package: treekoR
 Type: Package
 Title: Cytometry Cluster Hierarchy and Proportions to Parent
-Version: 0.99.3
+Version: 0.99.4
 Authors@R: c(person("Adam", "Chan", role = c("aut", "cre"),
                      email = "adam.s.chan@sydney.edu.au"),
              person("Ellis", "Patrick", role = "ctb"))
