@@ -4,8 +4,8 @@
 `treekoR` is a novel framework that aims to utilise the hierarchical nature of single cell cytometry data, to find robust and interpretable associations between cell subsets and patient clinical end points. treekoR achieves this by:
 
 - Deriving the tree structure of cell clusters
-- Measuring the proportion to parent (proportions of each node in the tree relative to the number of cells belonging to the immediate parent node), in addition to the proportion to all (proportion of cells in each node relative to all cells)
-- Significance testing, using the calculated proportions, to determine which cell subpopulation proportions most are correlated with the patient clinical outcome of interest
+- Measuring the %parent (proportions of each node in the tree relative to the number of cells belonging to the immediate parent node), in addition to the %total (proportion of cells in each node relative to all cells)
+- Significance testing, using the calculated proportions, to determine cell type proportions associated with patient's clinical outcome of interest
 - Providing an interactive html visualisation to help highlight key results
 
 ## Installation
@@ -14,6 +14,15 @@
 # install.packages("devtools")
 devtools::install_github("adam2o1o/treekoR")
 library(treekoR)
+```
+
+or, via Bioconductor
+
+```r
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("treekoR")
 ```
 
 ### References
