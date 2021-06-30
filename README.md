@@ -1,4 +1,4 @@
-# `treekoR` <img src="" width="200" align="right" />
+# `treekoR` <img src="inst/extdata/treekoR-logo-01b-png.png" width="200" align="right" />
 
 ## Overview
 `treekoR` is a novel framework that aims to utilise the hierarchical nature of single cell cytometry data, to find robust and interpretable associations between cell subsets and patient clinical end points. treekoR achieves this by:

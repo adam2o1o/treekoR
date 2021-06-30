@@ -127,6 +127,13 @@ test_that(
   }
 )
 
+test_that(
+  "Case getClusterTree_4: getClusterTree returns a phylo with non-null tips",
+  {
+    expect_true(!is.null(clust_tree$clust_tree$tip.label))
+  }
+)
+
 ###################################################
 # testTree
 ###################################################

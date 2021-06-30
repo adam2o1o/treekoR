@@ -10,7 +10,8 @@ getClusterTree(
   clusters,
   hierarchy_method = "hopach",
   hopach_kmax = 5,
-  hopach_K = 10
+  hopach_K = 10,
+  scale_exprs = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ children at each node in the tree}
 
 \item{hopach_K}{positive integer specifying the maximum number of levels in the
 tree. Must be 15 or less, due to computational limitations (overflow)}
+
+\item{scale_exprs}{boolean indicating whether to scale median cluster expression
+data before constructing hierarchical tree}
 }
 \value{
 

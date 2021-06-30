@@ -147,6 +147,8 @@ hopachToPhylo <- function(res) {
 #' children at each node in the tree
 #' @param hopach_K positive integer specifying the maximum number of levels in the
 #' tree. Must be 15 or less, due to computational limitations (overflow)
+#' @param scale_exprs boolean indicating whether to scale median cluster expression
+#' data before constructing hierarchical tree
 #'
 #' @return
 #' @import data.table
@@ -175,29 +177,37 @@ getClusterTree <- function(exprs,
                            clusters,
                            hierarchy_method="hopach",
                            hopach_kmax = 5,
-                           hopach_K = 10) {
+                           hopach_K = 10,
+                           scale_exprs=TRUE) {
   clust_med_dt <- as.data.table(exprs)
   clust_med_dt[, cluster_id := clusters]
   # data table containing median
-  res <-clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
+  res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
   res2 <- res[,.SD, .SDcols = !c('cluster_id')]
   rownames(res2) <- res[["cluster_id"]]
 
+  if (scale_exprs) {
+    res_unscaled <- res2
+    res2[, (colnames(res2)) := lapply(.SD, scale), .SDcols=colnames(res2)]
+  } else {
+    res_unscaled <- res2
+  }
+
   if (hierarchy_method == "hopach") {
-    hp_dend <- runHOPACH(data = as.data.frame(scale(res2)),
+    hp_dend <- runHOPACH(data = as.data.frame(res2),
                          kmax=hopach_kmax,
                          K=hopach_K)
     hc_phylo <- hopachToPhylo(hp_dend)
     hc_phylo$tip.label <- rownames(res2)[as.numeric(hc_phylo$tip.label)]
   } else {
-    clust_dist <- dist(scale(res2))
+    clust_dist <- dist(res2)
     hc_dend <- hclust(clust_dist, method=hierarchy_method)
     hc_phylo <- as.phylo(hc_dend)
     hc_phylo$tip.label <- as.character(res[["cluster_id"]])
   }
 
   return(list(
-    median_freq = res2,
+    median_freq = res_unscaled,
     clust_tree = hc_phylo
   ))
 }
