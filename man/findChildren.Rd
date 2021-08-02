@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyseTree.R
 \name{findChildren}
 \alias{findChildren}
-\title{Title}
+\title{findChildren}
 \usage{
 findChildren(tree)
 }
@@ -14,5 +14,5 @@ a ggtree object with the data containing a column with the clusters
 contained in each node
 }
 \description{
-Title
+findChildren
 }

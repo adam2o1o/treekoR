@@ -9,6 +9,7 @@ testTree(
   clusters,
   samples,
   classes,
+  sig_test = "ttest",
   pos_class_name = NULL,
   subjects = NULL,
   paired = FALSE
@@ -63,6 +64,7 @@ tested_tree <- testTree(clust_tree$clust_tree,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,
+                        sig_test="ttest",
                         pos_class_name=NULL,
                         subjects=NULL,
                         paired = FALSE)

@@ -32,41 +32,43 @@
 #' hopach_res <- runHOPACH(as.data.frame(scale(res2)))
 #' @export
 runHOPACH <- function(data, K = 10, kmax = 5, dissimilarity_metric = "cor") {
-  # Compute the distance matrix using correlation
-  dist <- distancematrix(data, d = dissimilarity_metric)
-  # Run HOPACH function
-  clustresult <- hopach(data, K = K , dmat = dist, kmax = kmax)
-  # Rearrange HOPACH results
-  final_labels <- strsplit(as.character(format(clustresult$final$labels,
-                                               scientific = FALSE)), "")
-  # Get each level seperate
-  level_list <- list()
-  for (i in seq_len(nchar(clustresult$final$labels[1]))) {
-    if (i != 1) {
-      level_list[[i]] <- paste(level_list[[i - 1]],
-                               unlist(lapply(final_labels, "[[", i)), sep = "")
-    }else{
-      level_list[[i]] <- unlist(lapply(final_labels, "[[", i))
+    # Compute the distance matrix using correlation
+    dist <- distancematrix(data, d = dissimilarity_metric)
+    # Run HOPACH function
+    clustresult <- hopach(data, K = K , dmat = dist, kmax = kmax)
+    # Rearrange HOPACH results
+    final_labels <- strsplit(as.character(format(clustresult$final$labels,
+                                                 scientific = FALSE)), "")
+    # Get each level seperate
+    level_list <- list()
+    for (i in seq_len(nchar(clustresult$final$labels[1]))) {
+        if (i != 1) {
+            level_list[[i]] <- paste(level_list[[i - 1]],
+                                     unlist(lapply(final_labels, "[[", i)),
+                                     sep = "")
+        } else{
+            level_list[[i]] <- unlist(lapply(final_labels, "[[", i))
+        }
     }
-  }
-  # Generate cutree results
-  cutree_list <- list()
-  # First level (All ones)
-  cutree_list[[1]] <- rep(1, length(rownames(data)))
-  names(cutree_list[[1]]) <- rownames(data)
-  cutree_list[2:(length(level_list) + 1)] <- lapply(level_list, function(x) {
-    x <- as.numeric(as.factor(x))
-    names(x) <- rownames(data)
-    x
-  })
-  # Last levels will be all distinct numbers
-  cutree_list[[length(cutree_list) + 1]] <- seq_len(length(clustresult$final$labels))
-  names(cutree_list[[length(cutree_list)]]) <- rownames(data)
+    # Generate cutree results
+    cutree_list <- list()
+    # First level (All ones)
+    cutree_list[[1]] <- rep(1, length(rownames(data)))
+    names(cutree_list[[1]]) <- rownames(data)
+    cutree_list[2:(length(level_list) + 1)] <- lapply(level_list, function(x) {
+        x <- as.numeric(as.factor(x))
+        names(x) <- rownames(data)
+        return(x)
+    })
+    # Last levels will be all distinct numbers
+    cutree_list[[length(cutree_list) + 1]] <-
+        seq_len(length(clustresult$final$labels))
+    names(cutree_list[[length(cutree_list)]]) <- rownames(data)
 
-  return(list(cutree_list = cutree_list))
+    return(list(cutree_list = cutree_list))
 }
 
-#' Title
+#' hopachToPhylo
 #'
 #' @param res an object returned from the runHOPACH() function
 #'
@@ -94,43 +96,42 @@ runHOPACH <- function(data, K = 10, kmax = 5, dissimilarity_metric = "cor") {
 #'
 #' @export
 hopachToPhylo <- function(res) {
-  cutree_list_df <- do.call(cbind, res$cutree_list)
-  for (i in seq_len(ncol(cutree_list_df)-1)) {
-    cutree_list_df[,i] <- paste0(i,"_",cutree_list_df[,i])
-  }
-
-  # We add < & > to each cluster for string matching purposes
-  base_nodes <- paste0("<",as.vector(cutree_list_df[,ncol(cutree_list_df)]),">")
-  # A vector containing the current grouping of nodes as the loop iterates
-  current_nodes <- base_nodes
-
-  # This loop is to iterate through the levels of the tree and
-  # sequentially combine clusters in a format to be read into a
-  # phylogenetic tree
-  # ------------------------------------------------------------
-  for (i in rev(seq_len(ncol(cutree_list_df)-1))) {
-    cur_lev_nodes <- as.vector(cutree_list_df[,i])
-    cur_lev_n_t <- table(cur_lev_nodes)
-    # Get parent nodes with more than two children
-    unique_nodes <- names(cur_lev_n_t[which(cur_lev_n_t >= 2)])
-    # For each parent node, we combine the corresponding children nodes
-    for (node in unique_nodes) {
-      base_nodes_combo <- base_nodes[which(cur_lev_nodes== node)]
-      base_nodes_rgx_s <- paste(base_nodes_combo, collapse="|")
-      if (sum(grepl(base_nodes_rgx_s, current_nodes)) > 1) {
-        nodes_to_combine <- current_nodes[grepl(base_nodes_rgx_s, current_nodes)]
-
-        current_nodes <- c(current_nodes[!current_nodes %in% nodes_to_combine],
-                           paste0("(", paste(nodes_to_combine, collapse=","), ")")
-        )
-      }
+    cutree_list_df <- do.call(cbind, res$cutree_list)
+    for (i in seq_len(ncol(cutree_list_df)-1)) {
+        cutree_list_df[,i] <- paste0(i,"_",cutree_list_df[,i])
     }
-  }
-  tree_string <- paste0(gsub("<|>", "", current_nodes), ";")
-  # Conver tree string into a phylo object
-  tree <- read.tree(text = tree_string)
 
-  return(tree)
+    # We add < & > to each cluster for string matching purposes
+    base_nodes <- paste0("<",as.vector(cutree_list_df[,ncol(cutree_list_df)]),">")
+    # A vector containing the current grouping of nodes as the loop iterates
+    current_nodes <- base_nodes
+
+    # This loop is to iterate through the levels of the tree and
+    # sequentially combine clusters in a format to be read into a
+    # phylogenetic tree
+    # ------------------------------------------------------------
+    for (i in rev(seq_len(ncol(cutree_list_df)-1))) {
+        cur_lev_nodes <- as.vector(cutree_list_df[,i])
+        cur_lev_n_t <- table(cur_lev_nodes)
+    # Get parent nodes with more than two children
+        unique_nodes <- names(cur_lev_n_t[which(cur_lev_n_t >= 2)])
+        # For each parent node, we combine the corresponding children nodes
+        for (node in unique_nodes) {
+            base_nodes_combo <- base_nodes[which(cur_lev_nodes== node)]
+            base_nodes_rgx_s <- paste(base_nodes_combo, collapse="|")
+            if (sum(grepl(base_nodes_rgx_s, current_nodes)) > 1) {
+                nodes_to_combine <- current_nodes[grepl(base_nodes_rgx_s, current_nodes)]
+                current_nodes <- c(current_nodes[!current_nodes %in% nodes_to_combine],
+                                   paste0("(", paste(nodes_to_combine, collapse=","), ")")
+                )
+            }
+        }
+    }
+    tree_string <- paste0(gsub("<|>", "", current_nodes), ";")
+    # Conver tree string into a phylo object
+    tree <- read.tree(text = tree_string)
+
+    return(tree)
 }
 
 
@@ -150,7 +151,6 @@ hopachToPhylo <- function(res) {
 #' @param scale_exprs boolean indicating whether to scale median cluster expression
 #' data before constructing hierarchical tree
 #'
-#' @return
 #' @import data.table
 #' @importFrom ggtree ggtree
 #' @importFrom ape as.phylo
@@ -179,69 +179,69 @@ getClusterTree <- function(exprs,
                            hopach_kmax = 5,
                            hopach_K = 10,
                            scale_exprs=TRUE) {
-  clust_med_dt <- as.data.table(exprs)
-  clust_med_dt[, cluster_id := clusters]
-  # data table containing median
-  res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
-  res2 <- res[,.SD, .SDcols = !c('cluster_id')]
-  rownames(res2) <- res[["cluster_id"]]
+    clust_med_dt <- as.data.table(exprs)
+    clust_med_dt[, cluster_id := clusters]
+    # data table containing median
+    res <- clust_med_dt[, lapply(.SD, median, na.rm=TRUE), by=cluster_id]
+    res2 <- res[,.SD, .SDcols = !c('cluster_id')]
+    rownames(res2) <- res[["cluster_id"]]
 
-  if (scale_exprs) {
-    res_unscaled <- res2
-    res2[, (colnames(res2)) := lapply(.SD, scale), .SDcols=colnames(res2)]
-  } else {
-    res_unscaled <- res2
-  }
+    if (scale_exprs) {
+        res_unscaled <- res2
+        res2[, (colnames(res2)) := lapply(.SD, scale), .SDcols=colnames(res2)]
+    } else {
+        res_unscaled <- res2
+    }
 
-  if (hierarchy_method == "hopach") {
-    hp_dend <- runHOPACH(data = as.data.frame(res2),
-                         kmax=hopach_kmax,
-                         K=hopach_K)
-    hc_phylo <- hopachToPhylo(hp_dend)
-    hc_phylo$tip.label <- rownames(res2)[as.numeric(hc_phylo$tip.label)]
-  } else {
-    clust_dist <- dist(res2)
-    hc_dend <- hclust(clust_dist, method=hierarchy_method)
-    hc_phylo <- as.phylo(hc_dend)
-    hc_phylo$tip.label <- as.character(res[["cluster_id"]])
-  }
+    if (hierarchy_method == "hopach") {
+        hp_dend <- runHOPACH(data = as.data.frame(res2),
+                             kmax=hopach_kmax,
+                             K=hopach_K)
+        hc_phylo <- hopachToPhylo(hp_dend)
+        hc_phylo$tip.label <- rownames(res2)[as.numeric(hc_phylo$tip.label)]
+    } else {
+        clust_dist <- dist(res2)
+        hc_dend <- hclust(clust_dist, method=hierarchy_method)
+        hc_phylo <- as.phylo(hc_dend)
+        hc_phylo$tip.label <- as.character(res[["cluster_id"]])
+    }
 
-  return(list(
-    median_freq = res_unscaled,
-    clust_tree = hc_phylo
-  ))
+    return(list(
+        median_freq = res_unscaled,
+        clust_tree = hc_phylo
+    ))
 }
 
-#' Title
+#' findChildren
 #'
 #' @param tree a ggtree object
 #'
 #' @return a ggtree object with the data containing a column with the clusters
 #' contained in each node
 findChildren <- function(tree) {
-  d <- tree$data
-  d$clusters <- d$label
-  d$clusters <- as.list(as.character(d$clusters))
-  uNodes <- sort(unique(d$x), decreasing = TRUE)
-  for(x in uNodes){
-    nodes = as.matrix(d[which(d$x==x), "node"])
-    for(n in nodes){
-      parentNode <- as.character(d$parent[which(d$node == n)])
-      childClusters <- d$clusters[[which(d$node == n)]]
-      parentNodeInd <- which(d$node == parentNode)
-      if (is.na(d$clusters[parentNodeInd])) {
-        d$clusters[[parentNodeInd]] <- childClusters
-      } else {
-        d$clusters[[parentNodeInd]] <- c(d$clusters[[parentNodeInd]], childClusters)
-      }
+    d <- tree$data
+    d$clusters <- d$label
+    d$clusters <- as.list(as.character(d$clusters))
+    uNodes <- sort(unique(d$x), decreasing = TRUE)
+    for(x in uNodes){
+        nodes = as.matrix(d[which(d$x==x), "node"])
+        for(n in nodes){
+            parentNode <- as.character(d$parent[which(d$node == n)])
+            childClusters <- d$clusters[[which(d$node == n)]]
+            parentNodeInd <- which(d$node == parentNode)
+            if (is.na(d$clusters[parentNodeInd])) {
+                d$clusters[[parentNodeInd]] <- childClusters
+            } else {
+                d$clusters[[parentNodeInd]] <- c(d$clusters[[parentNodeInd]], childClusters)
+            }
+        }
     }
-  }
-  d$clusters <- lapply(d$clusters, unlist)
-  d$clusters <- lapply(d$clusters, unique)
-  d$clusters <- lapply(d$clusters, function(x) x[!is.na(x)])
+    d$clusters <- lapply(d$clusters, unlist)
+    d$clusters <- lapply(d$clusters, unique)
+    d$clusters <- lapply(d$clusters, function(x) x[!is.na(x)])
 
-  tree$data <- d
-  return(tree)
+    tree$data <- d
+    return(tree)
 }
 
 #' Title
@@ -265,7 +265,7 @@ findChildren <- function(tree) {
 #' @param subjects a vector containing which subject the cell belongs to, used
 #' to identify matched samples in paired t-tests (not yet tested)
 #'
-#' @importFrom stats t.test
+#' @importFrom stats t.test wilcox.test
 #'
 #' @return a ggtree object with significance testing results in embedded data
 #' @export
@@ -288,6 +288,7 @@ findChildren <- function(tree) {
 #'                         clusters=clusters,
 #'                         samples=samples,
 #'                         classes=classes,
+#'                         sig_test="ttest",
 #'                         pos_class_name=NULL,
 #'                         subjects=NULL,
 #'                         paired = FALSE)
@@ -295,66 +296,108 @@ testTree <- function(phylo,
                      clusters,
                      samples,
                      classes,
+                     sig_test="ttest",
                      pos_class_name=NULL,
                      subjects=NULL,
                      paired = FALSE){
-  if (!is.null(pos_class_name)) {
-    if (!pos_class_name %in% unique(classes)) {
-      stop("'pos_class_name' needs to be in classes")
+    if (!is.null(pos_class_name)) {
+        if (!pos_class_name %in% unique(classes)) {
+            stop("'pos_class_name' needs to be in classes")
+        }
     }
-  }
-  if (length(unique(classes)) > 2) {
-    stop("length(unique(classes)) > 2.
-         treekoR can currently only test between two classes.")
-  }
-  t <- findChildren(ggtree(phylo, branch.length="none"))
-  td <- t$data
-  if(paired == TRUE){
-    samp2Group <- unique(data.frame(subjects, samples, classes))
-    samp2Group <- samp2Group[samp2Group$subjects %in%
+    if (length(unique(classes)) > 2) {
+        stop("length(unique(classes)) > 2.
+             treekoR can currently only test between two classes.")
+    }
+    if (!(sig_test %in% c("ttest", "wilcox"))) {
+        stop("Significance test needs to be either 'ttest' or 'wilcox'")
+    }
+    t <- findChildren(ggtree(phylo, branch.length="none"))
+    td <- t$data
+    if(paired == TRUE){
+        samp2Group <- unique(data.frame(subjects, samples, classes))
+        samp2Group <- samp2Group[samp2Group$subjects %in%
                                names(which(table(samp2Group$subjects)==2)),]
-    ### Put catch error in here
-    groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
-    groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
-  } else {
-    if (is.null(pos_class_name)) {
-      pos_class_name <- unique(classes)[1]
-      neg_class_name <- unique(classes)[2]
-      } else {
-      neg_class_name <- unique(classes)[unique(classes) != pos_class_name]
-      }
-    samp2Group <- unique(data.frame(samples, classes))
-    groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
-    groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
-  }
-  statParent <- statAll <- pvalParent <- pvalAll <- NULL
-  for( i in seq_len(nrow(td))){
-    childClusters <- td[i,'clusters'][[1]][[1]]
-    parent <- td[i,'parent'][[1]]
-    parentClusters <- td[td$node == parent,'clusters'][[1]][[1]]
-    if(mean(parentClusters %in% childClusters)==1){
-      statAll[i] <- 0
-      pvalAll[i] <- 1
-      statParent[i] <- 0
-      pvalParent[i] <- 1
+        ### Put catch error in here
+        groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
+        groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
     } else {
-      numAll <- table(samples)
-      numParent <- tapply(clusters %in% parentClusters, samples , sum)
-      numNode <- tapply(clusters %in% childClusters, samples, sum)
-      ratioAll <- numNode/pmax(numAll[names(numNode)],1)
-      ratioParent <- numNode/pmax(numParent[names(numNode)],1)
-      testAll <- t.test(ratioAll[groupA],ratioAll[groupB],paired = paired)
-      statAll[i] <- testAll$statistic
-      pvalAll[i] <- testAll$p.value
-      testParent <- t.test(ratioParent[groupA],ratioParent[groupB],paired = paired)
-      statParent[i] <- testParent$statistic
-      pvalParent[i] <- testParent$p.value
+        if (is.null(pos_class_name)) {
+            pos_class_name <- unique(classes)[1]
+            neg_class_name <- unique(classes)[2]
+        } else {
+            neg_class_name <- unique(classes)[unique(classes) != pos_class_name]
+        }
+        samp2Group <- unique(data.frame(samples, classes))
+        groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
+        groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
     }
-  }
-  td[, c("statAll", "statParent", "pvalAll", "pvalParent")] <-
-    data.frame(statAll, statParent, pvalAll, pvalParent)
-  t$data <- td
-  return(t)
+    statParent <- statAll <- pvalParent <- pvalAll <- NULL
+    for( i in seq_len(nrow(td))){
+        childClusters <- td[i,'clusters'][[1]][[1]]
+        parent <- td[i,'parent'][[1]]
+        parentClusters <- td[td$node == parent,'clusters'][[1]][[1]]
+        if(mean(parentClusters %in% childClusters)==1){
+            statAll[i] <- 0
+            pvalAll[i] <- 1
+            statParent[i] <- 0
+            pvalParent[i] <- 1
+        } else {
+            numAll <- table(samples)
+            numParent <- tapply(clusters %in% parentClusters, samples , sum)
+            numNode <- tapply(clusters %in% childClusters, samples, sum)
+            ratioAll <- numNode/pmax(numAll[names(numNode)],1)
+            ratioParent <- numNode/pmax(numParent[names(numNode)],1)
+            if (sig_test=="ttest") {
+                testAll <- t.test(ratioAll[groupA],ratioAll[groupB],paired = paired)
+                testParent <- t.test(ratioParent[groupA],ratioParent[groupB],paired = paired)
+            }
+            if (sig_test=="wilcox") {
+                testAll <- wilcox.test(ratioAll[groupA],ratioAll[groupB],paired = paired)
+                testParent <- wilcox.test(ratioParent[groupA],ratioParent[groupB],paired = paired)
+            }
+            statAll[i] <- testAll$statistic
+            pvalAll[i] <- testAll$p.value
+            statParent[i] <- testParent$statistic
+            pvalParent[i] <- testParent$p.value
+        }
+    }
+    td[, c("statAll", "statParent", "pvalAll", "pvalParent")] <-
+        data.frame(statAll, statParent, pvalAll, pvalParent)
+    t$data <- td
+    return(t)
+}
+
+#' getTotalProp
+#' @description getCellProp helper function
+#'
+#' @param vars1 name of cell type, matching to column in n_cells
+#' @param n_cells matrix of counts of each cell type per sample
+#' @param n_cells_pat vector containing number of cells per sample
+#'
+#' @return a vector containing the proportions of cell type vars1 as a
+#' percent of total per sample
+getTotalProp <- function(vars1,
+                         n_cells,
+                         n_cells_pat) {
+    rowSums(n_cells[,vars1])/n_cells_pat
+}
+
+#' getParentProp
+#' @description getCellProp helper function
+#'
+#' @param vars1 name of cell type, matching to column in n_cells
+#' @param vars2 name of parent cell type, matching to column in n_cells
+#' @param n_cells matrix of counts of each cell type per sample
+#'
+#' @return a vector containing the proportions of cell type vars1 as a
+#' percent of parent vars2 per sample
+getParentProp <- function(vars1,
+                          vars2,
+                          n_cells) {
+    # if parent population is null, then return NA for each sample
+    if (is.null(vars2)) {return(rep(NA,length=nrow(n_cells)))}
+    rowSums(n_cells[,vars1])/rowSums(n_cells[,vars2])
 }
 
 #' getCellProp
@@ -367,6 +410,8 @@ testTree <- function(phylo,
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param classes a vector containing the patient outcome/class each cell belongs to
 #'
+#' @importFrom dplyr %>% tally group_by select distinct pull mutate
+#' @importFrom tidyr complete pivot_wider
 #' @return a dataframe containing proportions calculated for each sample
 #' @export
 #'
@@ -392,39 +437,57 @@ getCellProp <- function(phylo,
                         clusters,
                         samples,
                         classes){
-  t <- findChildren(ggtree(phylo, branch.length="none"))
-  td <- t$data
-  td$parentClusters <- td$clusters[match(td$parent, td$node)]
-  # Remove root node
-  td <- td[-which(td$node == td$parent),]
+    t <- findChildren(ggtree(phylo, branch.length="none"))
+    td <- t$data
+    td$label <- ifelse(is.na(td$label),td$node, td$label)
+    # Get all parent nodes
+    parent_node_ind <- match(td$parent, td$node)
+    for (lvl in seq_len(max(td$x)-1)) {
+        td[,paste0("parent_",lvl,"_clusters")] <- list(td$clusters[parent_node_ind])
+        # Don't compute proportion relative to  all cells (top node)
+        td[td$parent[parent_node_ind] == parent_node_ind,paste0("parent_",lvl,"_clusters")] <- NA
+        parent_node_ind <- td$parent[parent_node_ind]
+    }
+    # Remove root node
+    td <- td[-which(td$node == td$parent),]
+    n_cells <- data.frame(cluster_id=factor(clusters,levels=t$data$label),
+                          sample_id=samples) %>%
+        group_by(cluster_id, sample_id, .drop=FALSE) %>%
+        tally %>%
+        tidyr::complete() %>%
+        tidyr::pivot_wider(names_from=cluster_id, values_from=n, values_fill=0)
 
-  # Get dataframe of parent proportions
-  prop_par <- data.frame(mapply(function(x,y) {
-    tapply(clusters %in% unlist(x),
-           samples, sum) /tapply(clusters %in% unlist(y), samples, sum)
-  }, td$clusters, td$parentClusters))
-
-  colnames(prop_par) <- paste0("prop_parent_", ifelse(is.na(td$label),
-                                                      td$node, td$label))
-
-  # Get dataframe of absolute proportions
-  prop_all <- data.frame(mapply(function(x) {
-    tapply(clusters %in% unlist(x), samples, sum)/table(samples)
-  }, td$clusters))
-
-  colnames(prop_all) <- paste0("prop_all_", ifelse(is.na(td$label),
-                                                   td$node, td$label))
-
-  # Mapping from sample to class outcome
-  samp_class <- unique(cbind(as.character(samples), as.character(classes)))
-
-  prop_df <- cbind(data.frame(sample = names(table(samples)),
-                              class = samp_class[,2][match(names(table(samples)),
-                                                           samp_class[,1])]),
-                   prop_all,
-                   prop_par)
-
-  return(prop_df)
+    n_cells_pat <- rowSums(n_cells %>%
+        select(-sample_id))
+    # Get absolute proportions of aggregated cells
+    prop_total <- vapply(td %>% pull(clusters),
+                         getTotalProp,
+                         double(length(n_cells_pat)),
+                         n_cells=n_cells,
+                         n_cells_pat=n_cells_pat)
+    colnames(prop_total) <- paste0("perc_total_", td$label)
+    # Get parent proportions of all cells
+    prop_parent <- lapply(seq_len(max(td$x)-1),
+                          function(lvl) {
+                              # For each cluster, calculate proportion for each sample
+                              res <- mapply(getParentProp,
+                                            td %>% pull(clusters),
+                                            td %>% pull(paste0("parent_",lvl,"_clusters")),
+                                            MoreArgs = list(n_cells=n_cells))
+                              colnames(res) <- paste0("perc_parent_",lvl,"_",td$label)
+                              # Remove columns with all NA
+                              res <- res[,colSums(is.na(res)) != nrow(res)]
+                              return(res)
+                              }) %>%
+        do.call(cbind, .)
+    # Mapping from sample to class outcome
+    samp_class <- dplyr::distinct(data.frame(sample_id=samples, class=classes))
+    prop_df <- cbind(data.frame(sample_id = n_cells$sample_id,
+                                class = samp_class[,2][match(n_cells$sample_id,
+                                                             samp_class[,1])]),
+                     prop_total,
+                     prop_parent)
+    return(prop_df)
 }
 
 #' getTreeResults
@@ -464,23 +527,138 @@ getCellProp <- function(phylo,
 #' head(res_df, 10)
 getTreeResults <- function(testedTree,
                            sort_by = "parent"){
-  if (!sort_by %in% c("parent", "all")) {
-    stop("'sort_by' must be 'parent' or 'all'")
+    if (!sort_by %in% c("parent", "all")) {
+        stop("'sort_by' must be 'parent' or 'all'")
     }
 
-  res <- as.data.frame(testedTree$data[,c(
-    "parent", "node", "isTip",
-    "clusters", "statAll", "statParent",
-    "pvalAll", "pvalParent"
-    )])
+    res <- as.data.frame(testedTree$data[,c(
+        "parent", "node", "isTip",
+        "clusters", "statAll", "statParent",
+        "pvalAll", "pvalParent"
+        )])
 
-  if (sort_by == "parent") {
-    res <- res[order(res$pvalParent),]
-  }
+    if (sort_by == "parent") {
+        res <- res[order(res$pvalParent),]
+    }
 
-  if (sort_by == "all") {
-    res <- res[order(res$pvalAll),]
-  }
+    if (sort_by == "all") {
+        res <- res[order(res$pvalAll),]
+    }
 
-  return(res)
+    return(res)
+}
+
+#' geometricMean
+#' @description getCellGMeans helper function
+#'
+#' @param x vector containing numeric values
+#' @return geomtric mean of vector x
+geometricMean = function(x, na.rm=TRUE){
+    exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
+}
+
+
+#' getCellGMeans
+#'
+#' @param phylo a phylogram with tip.labels corresponding to cell types/cluster
+#' contained in 'clusters' vector
+#' @param exprs a dataframe containing single cell expression data
+#' @param clusters a vector representing the cell type or cluster of each
+#' cell (can be character or numeric). If numeric, cluster names need to be
+#' consecutive starting from 1.
+#' @param samples a vector identifying the patient each cell belongs to
+#' @param classes a vector containing the patient outcome/class each cell belongs to
+#'
+#' @importFrom dplyr %>% tally group_by select distinct pull mutate summarise_all
+#' @importFrom tidyr  pivot_wider
+#' @return a dataframe containing proportions calculated for each sample
+#' @export
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' prop_df <- getCellGMeans(clust_tree$clust_tree,
+#'                         exprs=exprs,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes)
+getCellGMeans <- function(phylo,
+                          exprs,
+                          clusters,
+                          samples,
+                          classes){
+    t <- findChildren(ggtree(phylo, branch.length="none"))
+    td <- t$data
+    td$label <- ifelse(is.na(td$label),td$node, td$label)
+    td$parentClusters <- td$clusters[match(td$parent, td$node)]
+    # Remove root node
+    td <- td[-which(td$node == td$parent),]
+
+    # Calculate gmeans of base nodes
+    mean_all <- as.data.frame(exprs) %>%
+        mutate(
+            cluster_id=factor(clusters,levels=t$data$label),
+            sample_id=samples) %>%
+        group_by(cluster_id, sample_id, .drop=FALSE) %>%
+        summarise_all(geometricMean) %>%
+        tidyr::pivot_wider(names_from=cluster_id, names_prefix="gmean_",
+                           values_from=colnames(exprs))
+
+    n_all <- as.data.frame(exprs) %>%
+        mutate(
+            cluster_id=factor(clusters,levels=t$data$label),
+            sample_id=samples
+            ) %>%
+        group_by(cluster_id, sample_id, .drop=FALSE) %>%
+        tally %>%
+        # tidyr::complete() %>%
+        tidyr::pivot_wider(names_from=cluster_id, names_prefix="n_",
+                           values_from=n, values_fill=0)
+
+    mean_all_agg <- lapply(
+        which(!td$isTip),
+        function(ind) {
+            x <- td$clusters[[ind]]
+            mat2 <- n_all[,paste0("n_",x)]
+            gmean_mat <- vapply(colnames(exprs),
+                                function(y) {
+                                    mat1 <- mean_all[,paste0(y,"_gmean_",x)]
+                                    res <- exp(rowSums(mat2*log(mat1), na.rm=TRUE)/rowSums(mat2))
+                                    return(res)
+                                    },
+                                double(nrow(mat2)))
+            colnames(gmean_mat) <- paste0(colnames(exprs),"_gmean_",
+                                          td$label[[ind]])
+            return(gmean_mat)
+            })
+
+    samp_class <- dplyr::distinct(data.frame(sample_id=as.character(samples),
+                                             class_id=as.character(classes)))
+
+    mean_all_df <- cbind(
+        data.frame(
+            sample_id = mean_all$sample_id,
+            class = samp_class[,2][match(mean_all$sample_id,
+                                         samp_class[,1])]),
+        # Here exclude duplicated means calculated in the initial group_by sample_id/cluster_id
+        # because some parent nodes could be contained in the supplied clusters,
+        # but we want to get the aggregated mean of cells belonging to that parent
+        # as defiend by the hierarchical tree supplied
+        mean_all[,-which(colnames(mean_all)=="sample_id" |
+                             colnames(mean_all) %in%
+                             colnames(cbind(mean_all[,"sample_id"], mean_all_agg)))],
+        mean_all_agg)
+
+    return(mean_all_df)
 }

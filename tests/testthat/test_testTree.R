@@ -42,6 +42,16 @@ tested_tree_str <- testTree(phylo=clust_tree_str$clust_tree,
                         subjects=NULL,
                         paired = FALSE)
 
+prop_df <- getCellProp(clust_tree$clust_tree,
+                       clusters=clusters,
+                       samples=samples,
+                       classes=classes)
+
+gmean_df <- getCellGMeans(clust_tree$clust_tree,
+                          exprs=exprs,
+                          clusters=clusters,
+                          samples=samples,
+                          classes=classes)
 
 ###################################################
 # hopachToPhylo
@@ -258,5 +268,50 @@ test_that(
     expect_error(getCellProp(phylo=clust_tree$clust_tree,
                              clusters=clusters,
                              samples=samples))
+  }
+)
+
+test_that(
+  "Case getCellProp.2: Samples are carried through function",
+  {
+    expect_true(all(prop_df$sample_id %in% unique(samples)))
+    expect_true(all(unique(samples) %in% prop_df$sample_id))
+  }
+)
+
+test_that(
+  "Case getCellProp.3: Cluster proportions are calculated",
+  {
+    expect_true(all(paste0("perc_total_", unique(clusters)) %in% colnames(prop_df)))
+  }
+)
+
+###################################################
+# getCellGMeans
+###################################################
+# Error handling
+test_that(
+  "Case getCellGMeans.1: missing parameters",
+  {
+    expect_error(getCellGMeans(clusters=clusters,
+                               samples=samples,
+                             classes=classes))
+    expect_error(getCellGMeans(phylo=clust_tree$clust_tree,
+                               samples=samples,
+                               classes=classes))
+    expect_error(getCellGMeans(phylo=clust_tree$clust_tree,
+                               clusters=clusters,
+                               classes=classes))
+    expect_error(getCellGMeans(phylo=clust_tree$clust_tree,
+                               clusters=clusters,
+                               samples=samples))
+  }
+)
+
+test_that(
+  "Case getCellGMeans.2: Samples are carried through function",
+  {
+    expect_true(all(gmean_df$sample_id %in% unique(samples)))
+    expect_true(all(unique(samples) %in% gmean_df$sample_id))
   }
 )

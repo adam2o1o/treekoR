@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyseTree.R
 \name{hopachToPhylo}
 \alias{hopachToPhylo}
-\title{Title}
+\title{hopachToPhylo}
 \usage{
 hopachToPhylo(res)
 }
@@ -14,7 +14,7 @@ a phylogram converted from the outputted list from the runHOPACH
 function
 }
 \description{
-Title
+hopachToPhylo
 }
 \examples{
 library(SingleCellExperiment)

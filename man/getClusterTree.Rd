@@ -34,8 +34,6 @@ tree. Must be 15 or less, due to computational limitations (overflow)}
 data before constructing hierarchical tree}
 }
 \value{
-
-
 a list containing the cluster median frequencies and a phylogram of the
 hierarchical tree
 }
