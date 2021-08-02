@@ -51,10 +51,7 @@ clust_tree <- getClusterTree(exprs,
 tested_tree <- testTree(clust_tree$clust_tree,
                         clusters=clusters,
                         samples=samples,
-                        classes=classes,
-                        pos_class_name=NULL,
-                        subjects=NULL,
-                        paired = FALSE)
+                        classes=classes)
 
 colourTree(tested_tree)
 }

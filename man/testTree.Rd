@@ -10,9 +10,7 @@ testTree(
   samples,
   classes,
   sig_test = "ttest",
-  pos_class_name = NULL,
-  subjects = NULL,
-  paired = FALSE
+  pos_class_name = NULL
 )
 }
 \arguments{
@@ -28,11 +26,11 @@ starting from 1.}
 
 \item{pos_class_name}{a character indicating which class is positive}
 
-\item{subjects}{a vector containing which subject the cell belongs to, used
-to identify matched samples in paired t-tests (not yet tested)}
-
 \item{paired}{a boolean indicating whether to performed paired t-tests
 (not yet tested)}
+
+\item{subjects}{a vector containing which subject the cell belongs to, used
+to identify matched samples in paired t-tests (not yet tested)}
 }
 \value{
 a ggtree object with significance testing results in embedded data
@@ -65,7 +63,5 @@ tested_tree <- testTree(clust_tree$clust_tree,
                         samples=samples,
                         classes=classes,
                         sig_test="ttest",
-                        pos_class_name=NULL,
-                        subjects=NULL,
-                        paired = FALSE)
+                        pos_class_name=NULL)
 }

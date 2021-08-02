@@ -37,9 +37,7 @@ tested_tree <- testTree(clust_tree$clust_tree,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,
-                        pos_class_name=NULL,
-                        subjects=NULL,
-                        paired = FALSE)
+                        pos_class_name=NULL)
 
 res_df <- getTreeResults(tested_tree)
 

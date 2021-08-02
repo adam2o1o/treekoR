@@ -45,7 +45,7 @@ library(treekoR)
 ```
 
 # Overview
-treekoR is a novel framework that aims to utilise the hierarchical nature of single cell cytometry data, to find robust and interpretable associations between cell subsets and patient clinical end points. This is achieved by deriving the tree structure of cell clusters, followed by measuring the proportion to parent (proportions of each node in the tree relative to the number of cells belonging to the immediate parent node), in addition to the proportion to all (proportion of cells in each node relative to all cells). These proportions are then used in significance testing and classification models to determine which cell subpopulation proportions most correlated with the patient clinical outcome of interest. treekoR then provides an interactive visualisation which helps to highlight these results.
+treekoR is a novel framework that aims to utilise the hierarchical nature of single cell cytometry data, to find robust and interpretable associations between cell subsets and patient clinical end points. This is achieved by deriving the tree structure of cell clusters, followed by measuring the %parent (proportions of each node in the tree relative to the number of cells belonging to the immediate parent node), in addition to the %total (proportion of cells in each node relative to all cells). These proportions are then used in significance testing and classification models to determine which cell subpopulation proportions most correlated with the patient clinical outcome of interest. treekoR then provides an interactive visualisation which helps to highlight these results.
 
 # Usage
 ## Example Data
@@ -97,9 +97,7 @@ tested_tree <- testTree(phylo=clust_tree$clust_tree,
                       clusters=clusters,
                       samples=samples,
                       classes=classes,
-                      pos_class_name=NULL,
-                      subjects=NULL,
-                      paired = FALSE)
+                      pos_class_name=NULL)
 ```
 
 ### Extracting significance results
@@ -108,8 +106,8 @@ tested_tree <- testTree(phylo=clust_tree$clust_tree,
 - `parent`: the node of the parent
 - `isTip`: whether the node is a leaf node in the tree
 - `clusters`: the clusters belonging to the corresponding node
-- `statAll`: test statistic obtained from testing between conditions using the proportion of the node relative to all cells in each sample. `pvalAll` is the corresponding p-value (unadjusted)
-- `statParent`: test statistic obtained from testing between conditions using the proportion of the node relative to cells in the parent node in each sample. `pvalParent` is the corresponding p-value (unadjusted)
+- `stat_all`: test statistic obtained from testing between conditions using the proportion of the node relative to all cells (%total) in each sample. `pval_total` is the corresponding p-value (unadjusted)
+- `stat_parent`: test statistic obtained from testing between conditions using the proportion of the node relative to cells in the parent node (%parent) in each sample. `pval_parent` is the corresponding p-value (unadjusted)
 
 
 ```{r}
@@ -144,18 +142,22 @@ tested_tree <- testTree(clust_tree$clust_tree,
                       clusters=clusters,
                       samples=samples,
                       classes=classes,
-                      pos_class_name=NULL,
-                      subjects=NULL,
-                      paired = FALSE)
+                      pos_class_name=NULL)
 
 plotInteractiveHeatmap(tested_tree,
                        clust_med_df = clust_tree$median_freq,
                        clusters=clusters)
 ```
 
+## Feature extraction
+Extract cell type proportions (both %total and %parent), as well as the geometric mean of each marker per cell type. These can then be used for further investigation via visualisation or machine learning.
 
 ### Extracting Proportions
-Return a dataframe containig the absolute proportions and proportions to parent for each cell type for each sample. These proportions can then be used for visualisation or as input into further analyses.
+The function below returns a dataframe containing the absolute proportions and proportions to parent for each cell type for each sample.
+
+`perc_parent_n_celltype` denotes the proportion of the cell type relative to its parent (%parent) n generations away, ie. `perc_parent_1_2` is the proportion of cluster 2 relative to its direct parent in the hierarchical tree. 
+
+`perc_total_celltype` denotes the proportion of the cell type relative all cells (%total)
 ```{r}
 prop_df <- getCellProp(phylo=clust_tree$clust_tree,
                        clusters=clusters,
@@ -165,3 +167,16 @@ prop_df <- getCellProp(phylo=clust_tree$clust_tree,
 head(prop_df[,1:8])
 ```
 
+### Extracting Expression Geometric Means
+The function below returns a dataframe containing the geometric mean for each marker for each cell type for each sample.
+
+`m_gmean_celltype` denotes the geometric mean of marker m in the cell type per sample
+```{r}
+means_df <- getCellGMeans(clust_tree$clust_tree,
+                          exprs=exprs,
+                          clusters=clusters,
+                          samples=samples,
+                          classes=classes)
+
+head(means_df[,1:8])
+```

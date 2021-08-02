@@ -20,9 +20,7 @@ tested_tree <- testTree(phylo=clust_tree$clust_tree,
                         clusters=clusters,
                         samples=samples,
                         classes=classes,
-                        pos_class_name=NULL,
-                        subjects=NULL,
-                        paired = FALSE)
+                        pos_class_name=NULL)
 
 
 ## Randomise clusters to be in string
@@ -38,9 +36,7 @@ tested_tree_str <- testTree(phylo=clust_tree_str$clust_tree,
                         clusters=clusters_str,
                         samples=samples,
                         classes=classes,
-                        pos_class_name=NULL,
-                        subjects=NULL,
-                        paired = FALSE)
+                        pos_class_name=NULL)
 
 prop_df <- getCellProp(clust_tree$clust_tree,
                        clusters=clusters,
@@ -176,9 +172,7 @@ test_that(
                           clusters=clusters,
                           samples=samples,
                           classes=three_class_vec,
-                          pos_class_name=NULL,
-                          subjects=NULL,
-                          paired = FALSE),
+                          pos_class_name=NULL),
                  "treekoR can currently only test between two classes.")
   }
 )
@@ -191,10 +185,8 @@ test_that(
                           clusters=clusters,
                           samples=samples,
                           classes=one_class_vec,
-                          pos_class_name=NULL,
-                          subjects=NULL,
-                          paired = FALSE),
-                 "not enough 'y' observations")
+                          pos_class_name=NULL),
+                 "grouping factor must have exactly 2 levels")
   }
 )
 
@@ -207,16 +199,12 @@ test_that(
                           clusters=clusters,
                           samples=samples,
                           classes=classes,
-                          pos_class_name="COV",
-                          subjects=NULL,
-                          paired = FALSE))
+                          pos_class_name="COV"))
     expect_error(testTree(phylo=clust_tree$clust_tree,
                           clusters=clusters,
                           samples=samples,
                           classes=classes,
-                          pos_class_name="sadjn",
-                          subjects=NULL,
-                          paired = FALSE))
+                          pos_class_name="sadjn"))
   }
 )
 

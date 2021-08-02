@@ -28,7 +28,6 @@ Imports:
     utils,
     tidyr,
     dplyr,
-    magrittr,
     data.table,
     ggiraph,
     ggplot2,

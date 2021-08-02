@@ -4,7 +4,7 @@
 \alias{getCellProp}
 \title{getCellProp}
 \usage{
-getCellProp(phylo, clusters, samples, classes)
+getCellProp(phylo, clusters, samples, classes, excl_top_node_parent = TRUE)
 }
 \arguments{
 \item{phylo}{a phylogram with tip.labels corresponding to cell types/cluster
@@ -17,6 +17,9 @@ consecutive starting from 1.}
 \item{samples}{a vector identifying the patient each cell belongs to}
 
 \item{classes}{a vector containing the patient outcome/class each cell belongs to}
+
+\item{excl_top_node_parent}{a boolean indicating whether the %parent should be calculated
+for cell types with the highest node as their parent}
 }
 \value{
 a dataframe containing proportions calculated for each sample

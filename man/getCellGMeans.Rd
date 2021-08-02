@@ -40,7 +40,7 @@ clust_tree <- getClusterTree(exprs,
                              clusters,
                              hierarchy_method="hopach")
 
-prop_df <- getCellGMeans(clust_tree$clust_tree,
+means_df <- getCellGMeans(clust_tree$clust_tree,
                         exprs=exprs,
                         clusters=clusters,
                         samples=samples,

@@ -220,10 +220,7 @@ addFreqBars <- function(p,
 #' tested_tree <- testTree(clust_tree$clust_tree,
 #'                         clusters=clusters,
 #'                         samples=samples,
-#'                         classes=classes,
-#'                         pos_class_name=NULL,
-#'                         subjects=NULL,
-#'                         paired = FALSE)
+#'                         classes=classes)
 #'
 #' colourTree(tested_tree)
 colourTree <- function(tree,
@@ -237,27 +234,27 @@ colourTree <- function(tree,
                               tree$data$label)
 
     tooltip <- paste("<b>Cluster</b>:", tree$data$label,
-                     "\n <b>Parent</b>: stat = ", signif(tree$data$statParent,2),
-                     ", p-value = ", signif(tree$data$pvalParent,2),
-                     "\n <b>All</b>:    stat = ", signif(tree$data$statAll,2),
-                     ", p-value = ", signif(tree$data$pvalAll,2))
+                     "\n <b>Parent</b>: stat = ", signif(tree$data$stat_parent,2),
+                     ", p-value = ", signif(tree$data$pval_parent,2),
+                     "\n <b>Total</b>:    stat = ", signif(tree$data$stat_total,2),
+                     ", p-value = ", signif(tree$data$pval_total,2))
 
     tree_df <- tree$data
 
     # Add colour aes mapping to the first tree layer for the branch colours
-    tree$layers[[1]]$mapping <- modifyList(tree$layers[[1]]$mapping, aes(color=statParent))
-    tree$layers[[2]]$mapping <- modifyList(tree$layers[[2]]$mapping, aes(color=statParent))
+    tree$layers[[1]]$mapping <- modifyList(tree$layers[[1]]$mapping, aes(color=stat_parent))
+    tree$layers[[2]]$mapping <- modifyList(tree$layers[[2]]$mapping, aes(color=stat_parent))
 
     tree <- tree +
         geom_point_interactive(data = tree$data,
-                               aes(x,y, colour = statAll, tooltip = tooltip, data_id = label),
+                               aes(x,y, colour = stat_total, tooltip = tooltip, data_id = label),
                                size = point_size) +
         scale_colour_gradient2(low = low,
                                mid = mid,
                                high = high,
                                midpoint = 0,
-                               limits = c(min(tree$data$statParent,tree$data$statAll),
-                                          max(tree$data$statParent,tree$data$statAll)),
+                               limits = c(min(tree$data$stat_parent,tree$data$stat_total),
+                                          max(tree$data$stat_parent,tree$data$stat_total)),
                                name = 'Test\nStatistic')+
         guides(colour = guide_colourbar(order = 2),
                fill = guide_colourbar(order = 1)) +
@@ -278,7 +275,7 @@ plotSigScatter <- function(testedTree,
                            scatter_tooltip,
                            max_val) {
     ggplot(testedTree,
-           aes(x = statAll, y = statParent, shape=isTip, col=isTip,
+           aes(x = stat_total, y = stat_parent, shape=isTip, col=isTip,
                data_id=label,
                tooltip = scatter_tooltip)) +
         geom_point_interactive() +
@@ -286,7 +283,7 @@ plotSigScatter <- function(testedTree,
         geom_hline(yintercept = 0, linetype="dashed")+
         geom_vline(xintercept = 0, linetype="dashed")+
         coord_equal(xlim=c(-max_val,max_val),ylim=c(-max_val,max_val))+
-        labs(x = "Statistic: Relative to all",y = "Statistic: Relative to parent",
+        labs(x = "Test Statistic (%total)",y = "Test Statistic (%parent)",
              title = "Significance between patient condition using prop. to parent vs prop. to all") +
         theme_bw() +
         theme(panel.border = element_blank(),
@@ -331,9 +328,8 @@ plotSigScatter <- function(testedTree,
 #'
 #' @import ggiraph
 #' @import ggplot2
-#' @importFrom magrittr %>%
 #' @importFrom tidyr gather
-#' @importFrom dplyr select mutate
+#' @importFrom dplyr %>% select mutate
 #' @importFrom patchwork plot_layout
 #'
 #' @return an interactive ggplot object containing the hierarchical tree of clusters
@@ -359,10 +355,7 @@ plotSigScatter <- function(testedTree,
 #' tested_tree <- testTree(clust_tree$clust_tree,
 #'                         clusters=clusters,
 #'                         samples=samples,
-#'                         classes=classes,
-#'                         pos_class_name=NULL,
-#'                         subjects=NULL,
-#'                         paired = FALSE)
+#'                         classes=classes)
 #'
 #' plotInteractiveHeatmap(tested_tree,
 #'                        clust_med_df = clust_tree$median_freq,
@@ -403,14 +396,14 @@ plotInteractiveHeatmap <- function(testedTree,
         addFreqBars(clusters=clusters, offset = fb_offset,
                     bar_length = fb_bar_length, bar_width=fb_bar_width)
 
-    max_val <- max(abs(c(testedTreeDat$statAll, testedTreeDat$statParent)))
+    max_val <- max(abs(c(testedTreeDat$stat_total, testedTreeDat$stat_parent)))
 
     # Insert tooltips
     scatter_tooltip <- paste0("<b>Cluster</b>: ", testedTreeDat$label,
-                              "\n <b>p-value</b> (rel. to all)= ",
-                              signif(testedTreeDat$pvalAll, 2),
-                              "\n <b>p-value</b> (rel. to parent)= ",
-                              signif(testedTreeDat$pvalParent, 2))
+                              "\n <b>p-value</b> (%total)= ",
+                              signif(testedTreeDat$pval_total, 2),
+                              "\n <b>p-value</b> (%parent)= ",
+                              signif(testedTreeDat$pval_parent, 2))
     # Plot scatterplot with parent vs. all proportions
     g1 <- plotSigScatter(testedTreeDat,
                          scatter_tooltip=scatter_tooltip,

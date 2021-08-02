@@ -244,130 +244,6 @@ findChildren <- function(tree) {
     return(tree)
 }
 
-#' Title
-#' @description This function takes a hierarchical tree of the cluster
-#' medians of a cytometry dataset, and then uses this structure to perform
-#' t-tests between conditions of patients testing for difference using the
-#' proportion of cluster relative to sample's n and proportion of cluster
-#' relative to sample's n of hierarchical parent cluster.
-#' Takes a ggtree object and returns a ggtree object with testing results
-#' appended in the data
-#'
-#' @param paired a boolean indicating whether to performed paired t-tests
-#' (not yet tested)
-#' @param phylo a ggtree object
-#' @param clusters a vector representing the cell type or cluster of each cell
-#' (can be character or numeric). If numeric, cluster names need to be consecutive
-#' starting from 1.
-#' @param classes a vector containing the patient outcome/class each cell belongs to
-#' @param samples a vector identifying the patient each cell belongs to
-#' @param pos_class_name a character indicating which class is positive
-#' @param subjects a vector containing which subject the cell belongs to, used
-#' to identify matched samples in paired t-tests (not yet tested)
-#'
-#' @importFrom stats t.test wilcox.test
-#'
-#' @return a ggtree object with significance testing results in embedded data
-#' @export
-#'
-#' @examples
-#' library(SingleCellExperiment)
-#' data(COVIDSampleData)
-#'
-#' sce <- DeBiasi_COVID_CD8_samp
-#' exprs <- t(assay(sce, "exprs"))
-#' clusters <- colData(sce)$cluster_id
-#' classes <- colData(sce)$condition
-#' samples <- colData(sce)$sample_id
-#'
-#' clust_tree <- getClusterTree(exprs,
-#'                              clusters,
-#'                              hierarchy_method="hopach")
-#'
-#' tested_tree <- testTree(clust_tree$clust_tree,
-#'                         clusters=clusters,
-#'                         samples=samples,
-#'                         classes=classes,
-#'                         sig_test="ttest",
-#'                         pos_class_name=NULL,
-#'                         subjects=NULL,
-#'                         paired = FALSE)
-testTree <- function(phylo,
-                     clusters,
-                     samples,
-                     classes,
-                     sig_test="ttest",
-                     pos_class_name=NULL,
-                     subjects=NULL,
-                     paired = FALSE){
-    if (!is.null(pos_class_name)) {
-        if (!pos_class_name %in% unique(classes)) {
-            stop("'pos_class_name' needs to be in classes")
-        }
-    }
-    if (length(unique(classes)) > 2) {
-        stop("length(unique(classes)) > 2.
-             treekoR can currently only test between two classes.")
-    }
-    if (!(sig_test %in% c("ttest", "wilcox"))) {
-        stop("Significance test needs to be either 'ttest' or 'wilcox'")
-    }
-    t <- findChildren(ggtree(phylo, branch.length="none"))
-    td <- t$data
-    if(paired == TRUE){
-        samp2Group <- unique(data.frame(subjects, samples, classes))
-        samp2Group <- samp2Group[samp2Group$subjects %in%
-                               names(which(table(samp2Group$subjects)==2)),]
-        ### Put catch error in here
-        groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
-        groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
-    } else {
-        if (is.null(pos_class_name)) {
-            pos_class_name <- unique(classes)[1]
-            neg_class_name <- unique(classes)[2]
-        } else {
-            neg_class_name <- unique(classes)[unique(classes) != pos_class_name]
-        }
-        samp2Group <- unique(data.frame(samples, classes))
-        groupA <- as.character(samp2Group[samp2Group$classes==pos_class_name,'samples'])
-        groupB <- as.character(samp2Group[samp2Group$classes==neg_class_name,'samples'])
-    }
-    statParent <- statAll <- pvalParent <- pvalAll <- NULL
-    for( i in seq_len(nrow(td))){
-        childClusters <- td[i,'clusters'][[1]][[1]]
-        parent <- td[i,'parent'][[1]]
-        parentClusters <- td[td$node == parent,'clusters'][[1]][[1]]
-        if(mean(parentClusters %in% childClusters)==1){
-            statAll[i] <- 0
-            pvalAll[i] <- 1
-            statParent[i] <- 0
-            pvalParent[i] <- 1
-        } else {
-            numAll <- table(samples)
-            numParent <- tapply(clusters %in% parentClusters, samples , sum)
-            numNode <- tapply(clusters %in% childClusters, samples, sum)
-            ratioAll <- numNode/pmax(numAll[names(numNode)],1)
-            ratioParent <- numNode/pmax(numParent[names(numNode)],1)
-            if (sig_test=="ttest") {
-                testAll <- t.test(ratioAll[groupA],ratioAll[groupB],paired = paired)
-                testParent <- t.test(ratioParent[groupA],ratioParent[groupB],paired = paired)
-            }
-            if (sig_test=="wilcox") {
-                testAll <- wilcox.test(ratioAll[groupA],ratioAll[groupB],paired = paired)
-                testParent <- wilcox.test(ratioParent[groupA],ratioParent[groupB],paired = paired)
-            }
-            statAll[i] <- testAll$statistic
-            pvalAll[i] <- testAll$p.value
-            statParent[i] <- testParent$statistic
-            pvalParent[i] <- testParent$p.value
-        }
-    }
-    td[, c("statAll", "statParent", "pvalAll", "pvalParent")] <-
-        data.frame(statAll, statParent, pvalAll, pvalParent)
-    t$data <- td
-    return(t)
-}
-
 #' getTotalProp
 #' @description getCellProp helper function
 #'
@@ -409,8 +285,10 @@ getParentProp <- function(vars1,
 #' consecutive starting from 1.
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param excl_top_node_parent a boolean indicating whether the %parent should be calculated
+#' for cell types with the highest node as their parent
 #'
-#' @importFrom dplyr %>% tally group_by select distinct pull mutate
+#' @importFrom dplyr %>% tally group_by select distinct pull mutate n
 #' @importFrom tidyr complete pivot_wider
 #' @return a dataframe containing proportions calculated for each sample
 #' @export
@@ -436,17 +314,30 @@ getParentProp <- function(vars1,
 getCellProp <- function(phylo,
                         clusters,
                         samples,
-                        classes){
+                        classes,
+                        excl_top_node_parent=TRUE){
     t <- findChildren(ggtree(phylo, branch.length="none"))
     td <- t$data
     td$label <- ifelse(is.na(td$label),td$node, td$label)
     # Get all parent nodes
     parent_node_ind <- match(td$parent, td$node)
-    for (lvl in seq_len(max(td$x)-1)) {
-        td[,paste0("parent_",lvl,"_clusters")] <- list(td$clusters[parent_node_ind])
-        # Don't compute proportion relative to  all cells (top node)
-        td[td$parent[parent_node_ind] == parent_node_ind,paste0("parent_",lvl,"_clusters")] <- NA
-        parent_node_ind <- td$parent[parent_node_ind]
+    child_node_ind <- td$node
+    if (excl_top_node_parent) {
+        iter_layer_ind <- seq_len(max(td$x)-1)
+        for (lvl in iter_layer_ind) {
+            td[,paste0("parent_",lvl,"_clusters")] <- list(td$clusters[parent_node_ind])
+            # Don't compute proportion relative to  all cells (top node)
+            td[td$parent[parent_node_ind] == parent_node_ind,paste0("parent_",lvl,"_clusters")] <- NA
+            parent_node_ind <- td$parent[parent_node_ind]
+        }
+    } else {
+        iter_layer_ind <- seq_len(max(td$x))
+        for (lvl in iter_layer_ind) {
+            td[,paste0("parent_",lvl,"_clusters")] <- list(td$clusters[parent_node_ind])
+            td[which(child_node_ind == parent_node_ind),paste0("parent_",lvl,"_clusters")] <- NA
+            child_node_ind <- parent_node_ind
+            parent_node_ind <- td$parent[parent_node_ind]
+        }
     }
     # Remove root node
     td <- td[-which(td$node == td$parent),]
@@ -467,7 +358,7 @@ getCellProp <- function(phylo,
                          n_cells_pat=n_cells_pat)
     colnames(prop_total) <- paste0("perc_total_", td$label)
     # Get parent proportions of all cells
-    prop_parent <- lapply(seq_len(max(td$x)-1),
+    prop_parent <- lapply(iter_layer_ind,
                           function(lvl) {
                               # For each cluster, calculate proportion for each sample
                               res <- mapply(getParentProp,
@@ -488,64 +379,6 @@ getCellProp <- function(phylo,
                      prop_total,
                      prop_parent)
     return(prop_df)
-}
-
-#' getTreeResults
-#'
-#' @param testedTree a ggtree object outputed from testTree()
-#' @param sort_by whether to sort by p-values testing via proportions to parent or
-#' p-values testing via absolute proportions. Values can can be c(NA, "parent", "all")
-#'
-#' @return a dataframe with hierarchical tree nodes, corresponding clusters and
-#' corresponding significance testing results
-#' @export
-#'
-#' @examples
-#' library(SingleCellExperiment)
-#' data(COVIDSampleData)
-#'
-#' sce <- DeBiasi_COVID_CD8_samp
-#' exprs <- t(assay(sce, "exprs"))
-#' clusters <- colData(sce)$cluster_id
-#' classes <- colData(sce)$condition
-#' samples <- colData(sce)$sample_id
-#'
-#' clust_tree <- getClusterTree(exprs,
-#'                              clusters,
-#'                              hierarchy_method="hopach")
-#'
-#' tested_tree <- testTree(clust_tree$clust_tree,
-#'                         clusters=clusters,
-#'                         samples=samples,
-#'                         classes=classes,
-#'                         pos_class_name=NULL,
-#'                         subjects=NULL,
-#'                         paired = FALSE)
-#'
-#' res_df <- getTreeResults(tested_tree)
-#'
-#' head(res_df, 10)
-getTreeResults <- function(testedTree,
-                           sort_by = "parent"){
-    if (!sort_by %in% c("parent", "all")) {
-        stop("'sort_by' must be 'parent' or 'all'")
-    }
-
-    res <- as.data.frame(testedTree$data[,c(
-        "parent", "node", "isTip",
-        "clusters", "statAll", "statParent",
-        "pvalAll", "pvalParent"
-        )])
-
-    if (sort_by == "parent") {
-        res <- res[order(res$pvalParent),]
-    }
-
-    if (sort_by == "all") {
-        res <- res[order(res$pvalAll),]
-    }
-
-    return(res)
 }
 
 #' geometricMean
@@ -569,7 +402,7 @@ geometricMean = function(x, na.rm=TRUE){
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param classes a vector containing the patient outcome/class each cell belongs to
 #'
-#' @importFrom dplyr %>% tally group_by select distinct pull mutate summarise_all
+#' @importFrom dplyr %>% tally group_by select distinct pull mutate summarise_all n
 #' @importFrom tidyr  pivot_wider
 #' @return a dataframe containing proportions calculated for each sample
 #' @export
@@ -588,7 +421,7 @@ geometricMean = function(x, na.rm=TRUE){
 #'                              clusters,
 #'                              hierarchy_method="hopach")
 #'
-#' prop_df <- getCellGMeans(clust_tree$clust_tree,
+#' means_df <- getCellGMeans(clust_tree$clust_tree,
 #'                         exprs=exprs,
 #'                         clusters=clusters,
 #'                         samples=samples,
@@ -661,4 +494,167 @@ getCellGMeans <- function(phylo,
         mean_all_agg)
 
     return(mean_all_df)
+}
+
+
+#' Title
+#' @description This function takes a hierarchical tree of the cluster
+#' medians of a cytometry dataset, and then uses this structure to perform
+#' t-tests between conditions of patients testing for difference using the
+#' proportion of cluster relative to sample's n and proportion of cluster
+#' relative to sample's n of hierarchical parent cluster.
+#' Takes a ggtree object and returns a ggtree object with testing results
+#' appended in the data
+#'
+#' @param paired a boolean indicating whether to performed paired t-tests
+#' (not yet tested)
+#' @param phylo a ggtree object
+#' @param clusters a vector representing the cell type or cluster of each cell
+#' (can be character or numeric). If numeric, cluster names need to be consecutive
+#' starting from 1.
+#' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param samples a vector identifying the patient each cell belongs to
+#' @param pos_class_name a character indicating which class is positive
+#' @param subjects a vector containing which subject the cell belongs to, used
+#' to identify matched samples in paired t-tests (not yet tested)
+#'
+#' @importFrom stats t.test wilcox.test as.formula
+#'
+#' @return a ggtree object with significance testing results in embedded data
+#' @export
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' tested_tree <- testTree(clust_tree$clust_tree,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes,
+#'                         sig_test="ttest",
+#'                         pos_class_name=NULL)
+testTree <- function(phylo,
+                     clusters,
+                     samples,
+                     classes,
+                     sig_test="ttest",
+                     pos_class_name=NULL){
+    if (!is.null(pos_class_name)) {
+        if (!pos_class_name %in% unique(classes)) {
+            stop("'pos_class_name' needs to be in classes")
+        }
+    }
+    if (length(unique(classes)) > 2) {
+        stop("length(unique(classes)) > 2.
+             treekoR can currently only test between two classes.")
+    }
+    if (!(sig_test %in% c("ttest", "wilcox"))) {
+        stop("Significance test needs to be either 'ttest' or 'wilcox'")
+    }
+
+    t <- findChildren(ggtree(phylo, branch.length="none"))
+    td <- t$data
+    td$label <- ifelse(is.na(td$label),td$node, td$label)
+    prop_df <- getCellProp(phylo,
+                           clusters=clusters,
+                           samples=samples,
+                           classes=classes,
+                           excl_top_node_parent=FALSE)
+    if (is.null(pos_class_name)) {
+        pos_class_name <- as.character(unique(prop_df$class)[1])
+        neg_class_name <- as.character(unique(prop_df$class)[2])
+    } else {
+        neg_class_name <- as.character(unique(prop_df$class)[unique(prop_df$class) != pos_class_name])
+    }
+    prop_df$class <- factor(prop_df$class, levels=c(pos_class_name,neg_class_name))
+    stat_parent <- stat_total <- pval_parent <- pval_total <- NULL
+    for( i in seq_len(nrow(td))[-which(td$node == td$parent)]){
+        cell_type = td$label[i]
+        if (sig_test=="ttest") {
+            test_total <- t.test(formula=as.formula(paste0("perc_total_",cell_type, "~class")),
+                                 data=prop_df)
+            test_parent <- t.test(formula=as.formula(paste0("perc_parent_1_",cell_type, "~class")),
+                                  data=prop_df)
+        }
+        else if (sig_test=="wilcox") {
+            test_total <- wilcox.test(formula=as.formula(paste0("perc_total_",cell_type, "~class")),
+                                      data=prop_df)
+            test_parent <- wilcox.test(formula=as.formula(paste0("perc_parent_1_",cell_type, "~class")),
+                                       data=prop_df)
+        }
+        stat_total[i] <- test_total$statistic
+        pval_total[i] <- test_total$p.value
+        stat_parent[i] <- test_parent$statistic
+        pval_parent[i] <- test_parent$p.value
+    }
+    td[, c("stat_total", "stat_parent", "pval_total", "pval_parent")] <-
+        data.frame(stat_total, stat_parent, pval_total, pval_parent)
+    t$data <- td
+    return(t)
+}
+
+#' getTreeResults
+#'
+#' @param testedTree a ggtree object outputed from testTree()
+#' @param sort_by whether to sort by p-values testing via proportions to parent or
+#' p-values testing via absolute proportions. Values can can be c(NA, "parent", "all")
+#'
+#' @return a dataframe with hierarchical tree nodes, corresponding clusters and
+#' corresponding significance testing results
+#' @export
+#'
+#' @examples
+#' library(SingleCellExperiment)
+#' data(COVIDSampleData)
+#'
+#' sce <- DeBiasi_COVID_CD8_samp
+#' exprs <- t(assay(sce, "exprs"))
+#' clusters <- colData(sce)$cluster_id
+#' classes <- colData(sce)$condition
+#' samples <- colData(sce)$sample_id
+#'
+#' clust_tree <- getClusterTree(exprs,
+#'                              clusters,
+#'                              hierarchy_method="hopach")
+#'
+#' tested_tree <- testTree(clust_tree$clust_tree,
+#'                         clusters=clusters,
+#'                         samples=samples,
+#'                         classes=classes,
+#'                         pos_class_name=NULL)
+#'
+#' res_df <- getTreeResults(tested_tree)
+#'
+#' head(res_df, 10)
+getTreeResults <- function(testedTree,
+                           sort_by = "parent"){
+    if (!sort_by %in% c("parent", "total")) {
+        stop("'sort_by' must be 'parent' or 'total'")
+    }
+
+    res <- as.data.frame(testedTree$data[,c(
+        "parent", "node", "isTip",
+        "clusters", "stat_total", "stat_parent",
+        "pval_total", "pval_parent"
+    )])
+
+    if (sort_by == "parent") {
+        res <- res[order(res$pval_parent),]
+    }
+
+    else if (sort_by == "total") {
+        res <- res[order(res$pval_total),]
+    }
+
+    return(res)
 }

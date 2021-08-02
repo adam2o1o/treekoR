@@ -104,10 +104,7 @@ clust_tree <- getClusterTree(exprs,
 tested_tree <- testTree(clust_tree$clust_tree,
                         clusters=clusters,
                         samples=samples,
-                        classes=classes,
-                        pos_class_name=NULL,
-                        subjects=NULL,
-                        paired = FALSE)
+                        classes=classes)
 
 plotInteractiveHeatmap(tested_tree,
                        clust_med_df = clust_tree$median_freq,
