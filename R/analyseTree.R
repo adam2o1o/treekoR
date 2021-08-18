@@ -385,6 +385,7 @@ getCellProp <- function(phylo,
 #' @description getCellGMeans helper function
 #'
 #' @param x vector containing numeric values
+#' @param na.rm whether or not to ignore NA values
 #' @return geomtric mean of vector x
 geometricMean = function(x, na.rm=TRUE){
     exp(sum(log(x[x > 0]), na.rm=na.rm) / length(x))
@@ -506,8 +507,6 @@ getCellGMeans <- function(phylo,
 #' Takes a ggtree object and returns a ggtree object with testing results
 #' appended in the data
 #'
-#' @param paired a boolean indicating whether to performed paired t-tests
-#' (not yet tested)
 #' @param phylo a ggtree object
 #' @param clusters a vector representing the cell type or cluster of each cell
 #' (can be character or numeric). If numeric, cluster names need to be consecutive
@@ -515,8 +514,7 @@ getCellGMeans <- function(phylo,
 #' @param classes a vector containing the patient outcome/class each cell belongs to
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param pos_class_name a character indicating which class is positive
-#' @param subjects a vector containing which subject the cell belongs to, used
-#' to identify matched samples in paired t-tests (not yet tested)
+#' @param sig_test a character, either "ttest" or "wilcox" indicating the significance test to be used
 #'
 #' @importFrom stats t.test wilcox.test as.formula
 #'
