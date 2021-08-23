@@ -579,15 +579,15 @@ testTree <- function(phylo,
     for( i in seq_len(nrow(td))[-which(td$node == td$parent)]){
         cell_type = td$label[i]
         if (sig_test=="ttest") {
-            test_total <- t.test(formula=as.formula(paste0("perc_total_",cell_type, "~class")),
+            test_total <- t.test(formula=as.formula(paste0("`perc_total_",cell_type, "`~class")),
                                  data=prop_df)
-            test_parent <- t.test(formula=as.formula(paste0("perc_parent_1_",cell_type, "~class")),
+            test_parent <- t.test(formula=as.formula(paste0("`perc_parent_1_",cell_type, "`~class")),
                                   data=prop_df)
         }
         else if (sig_test=="wilcox") {
-            test_total <- wilcox.test(formula=as.formula(paste0("perc_total_",cell_type, "~class")),
+            test_total <- wilcox.test(formula=as.formula(paste0("`perc_total_",cell_type, "`~class")),
                                       data=prop_df)
-            test_parent <- wilcox.test(formula=as.formula(paste0("perc_parent_1_",cell_type, "~class")),
+            test_parent <- wilcox.test(formula=as.formula(paste0("`perc_parent_1_",cell_type, "`~class")),
                                        data=prop_df)
         }
         stat_total[i] <- test_total$statistic
