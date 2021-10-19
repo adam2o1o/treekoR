@@ -396,7 +396,7 @@ plotInteractiveHeatmap <- function(testedTree,
         addFreqBars(clusters=clusters, offset = fb_offset,
                     bar_length = fb_bar_length, bar_width=fb_bar_width)
 
-    max_val <- max(abs(c(testedTreeDat$stat_total, testedTreeDat$stat_parent)))
+    max_val <- max(abs(c(testedTreeDat$stat_total, testedTreeDat$stat_parent)), na.rm=TRUE)
 
     # Insert tooltips
     scatter_tooltip <- paste0("<b>Cluster</b>: ", testedTreeDat$label,
