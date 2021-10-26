@@ -8,6 +8,8 @@ geometricMean(x, na.rm = TRUE)
 }
 \arguments{
 \item{x}{vector containing numeric values}
+
+\item{na.rm}{whether or not to ignore NA values}
 }
 \value{
 geomtric mean of vector x

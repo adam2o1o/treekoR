@@ -149,6 +149,32 @@ plotInteractiveHeatmap(tested_tree,
                        clusters=clusters)
 ```
 
+### Using counts models for significance testing 
+
+Below we change the significance test to use count models instead of a t-test/Wilcoxon test. The available methods are `"GLMM"` or `"edgeR"`
+
+```{r}
+clust_tree <- getClusterTree(exprs,
+                             clusters,
+                             hierarchy_method="hopach")
+
+tested_tree_edgeR <- testTree(clust_tree$clust_tree,
+                      clusters=clusters,
+                      samples=samples,
+                      classes=classes,
+                      sig_test="edgeR",
+                      pos_class_name="COV")
+
+plotInteractiveHeatmap(tested_tree_edgeR,
+                       clust_med_df = clust_tree$median_freq,
+                       clusters=clusters)
+```
+You can also extract edgeR FDR values as so:
+```{r}
+head(tested_tree_edgeR$data[,c("parent", "node", "isTip", "clusters", "FDR_parent", "FDR_total")])
+```
+
+
 ## Feature extraction
 Extract cell type proportions (both %total and %parent), as well as the geometric mean of each marker per cell type. These can then be used for further investigation via visualisation or machine learning.
 
@@ -180,3 +206,9 @@ means_df <- getCellGMeans(clust_tree$clust_tree,
 
 head(means_df[,1:8])
 ```
+
+
+```{r}
+sessionInfo()
+```
+

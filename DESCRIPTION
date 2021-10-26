@@ -1,7 +1,7 @@
 Package: treekoR
 Type: Package
 Title: Cytometry Cluster Hierarchy and Cellular-to-phenotype Associations
-Version: 1.1.1
+Version: 1.1.2
 Authors@R: c(person("Adam", "Chan", role = c("aut", "cre"),
                      email = "adam.s.chan@sydney.edu.au"),
              person("Ellis", "Patrick", role = "ctb"))
@@ -35,11 +35,15 @@ Imports:
     ape,
     ggtree,
     patchwork,
-    SingleCellExperiment
+    SingleCellExperiment,
+    diffcyt,
+    edgeR,
+    lme4,
+    multcomp
 License: GPL-3
 Encoding: UTF-8
 LazyData: false
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 Suggests: 
     knitr,
     rmarkdown,

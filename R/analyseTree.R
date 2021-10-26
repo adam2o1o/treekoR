@@ -448,7 +448,7 @@ getCellGMeans <- function(phylo,
         summarise_all(geometricMean) %>%
         tidyr::pivot_wider(names_from=cluster_id, names_prefix="gmean_",
                            values_from=colnames(exprs))
-
+    # Calculate number of cells per base node and sample
     n_all <- as.data.frame(exprs) %>%
         mutate(
             cluster_id=factor(clusters,levels=t$data$label),
@@ -459,7 +459,7 @@ getCellGMeans <- function(phylo,
         # tidyr::complete() %>%
         tidyr::pivot_wider(names_from=cluster_id, names_prefix="n_",
                            values_from=n, values_fill=0)
-
+    # Calculate gmeans of each non-leaf cluster in tree
     mean_all_agg <- lapply(
         which(!td$isTip),
         function(ind) {
@@ -497,8 +497,185 @@ getCellGMeans <- function(phylo,
     return(mean_all_df)
 }
 
+#' runEdgeRTests
+#' @description This function runs edgeR using the treekoR inputs across all nodes
+#' of the hierarchical tree of clusters, adapted from the diffcyt workflow
+#'
+#' @param td a dataframe of data from ggtree object
+#' @param clusters a vector representing the cell type or cluster of each cell
+#' (can be character or numeric). If numeric, cluster names need to be consecutive
+#' starting from 1.
+#' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param samples a vector identifying the patient each cell belongs to
+#'
+#' @importFrom edgeR DGEList estimateDisp glmFit glmLRT topTags
+#' @importFrom dplyr %>% distinct mutate left_join rename
+#' @importFrom stats model.matrix
+#'
+#' @return a dataframe with pvalues, test statistic (signed -log10(p)), and FDR
+runEdgeRTests <- function(td,
+                          clusters,
+                          samples,
+                          classes,
+                          pos_class_name) {
+    n_parent <- NULL
+    n_node <- NULL
+    for (i in seq_len(nrow(td))) {
+        child_clusters <- td[i, "clusters"][[1]][[1]]
+        parent_node <- td[i, "parent"][[1]]
+        parent_clusters <- td[td$node == parent_node, "clusters"][[1]][[1]]
+        n_parent <- rbind(n_parent, tapply(clusters %in% parent_clusters,
+                                           samples, sum))
+        n_node <- rbind(n_node, tapply(clusters %in% child_clusters, samples,
+                                       sum))
+    }
+    class_df <- data.frame(classes, samples) %>%
+        distinct() %>%
+        mutate(cl = ifelse(classes == pos_class_name,1, 0))
 
-#' Title
+    ## EdgeR parent
+    cl <- class_df$cl
+    names(cl) <- class_df$samples
+    y <- edgeR::DGEList(counts=n_node,
+                        group = cl[colnames(n_node)],
+                        lib.size = rep(1,ncol(n_node)))
+    design <- model.matrix(~cl[colnames(n_node)])
+    # log because of getOffset()
+    y$offset <- log(n_parent+1)
+    y <- edgeR::estimateDisp(y, design)
+    fit <- edgeR::glmFit(y,design)
+    lrt <- edgeR::glmLRT(fit,coef=2)
+    top_parent <- edgeR::topTags(lrt, n = 10000)
+    top_nodes_parent <- top_parent$table
+    top_nodes_parent$node <- rownames(top_nodes_parent)
+
+    ## EdgeR total
+    y <- edgeR::DGEList(counts=n_node, group = cl[colnames(n_node)])
+    y <- edgeR::estimateDisp(y)
+    fit <- edgeR::glmFit(y)
+    lrt <- edgeR::glmLRT(fit,coef=2)
+    top_total <- edgeR::topTags(lrt, n = 10000)
+    top_nodes_total <- top_total$table
+    colnames(top_nodes_total) <- paste(colnames(top_nodes_total), "total", sep = "_")
+    top_nodes_total$node <- rownames(top_nodes_total)
+
+    td <- td %>%
+        left_join(
+            top_nodes_parent %>%
+                mutate(stat_parent = -log(PValue,10)*sign(logFC),
+                       node = as.numeric(node)) %>%
+                rename(c("pval_parent"="PValue", "FDR_parent"="FDR")) %>%
+                dplyr::select(stat_parent, pval_parent, FDR_parent, node),
+            by=c("node"="node")
+        ) %>%
+        left_join(
+            top_nodes_total %>%
+                mutate(stat_total = -log(PValue_total,10)*sign(logFC_total),
+                       node = as.numeric(node)) %>%
+                rename(c("pval_total"="PValue_total")) %>%
+                dplyr::select(stat_total, pval_total, FDR_total, node),
+            by=c("node"="node")
+        )
+
+    return(td)
+}
+
+#' runGLMMTests
+#' @description This function runs GLMM using the treekoR inputs across all nodes
+#' of the hierarchical tree of clusters, adapted from the diffcyt workflow.
+#' (Unable to get direction of test statistic currently)
+#'
+#' @param td a dataframe of data from ggtree object
+#' @param clusters a vector representing the cell type or cluster of each cell
+#' (can be character or numeric). If numeric, cluster names need to be consecutive
+#' starting from 1.
+#' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param samples a vector identifying the patient each cell belongs to
+#'
+#' @importFrom diffcyt createFormula
+#' @importFrom lme4 glmer
+#' @importFrom multcomp glht
+#' @importFrom dplyr %>% bind_cols distinct mutate left_join rename filter pull
+#'
+#' @return a dataframe with pvalues and test statistics
+runGLMMTests <- function(td,
+                         clusters,
+                         samples,
+                         classes,
+                         pos_class_name,
+                         neg_class_name) {
+    n_parent <- NULL
+    n_node <- NULL
+    for (i in seq_len(nrow(td))) {
+        child_clusters <- td[i, "clusters"][[1]][[1]]
+        parent_node <- td[i, "parent"][[1]]
+        parent_clusters <- td[td$node == parent_node, "clusters"][[1]][[1]]
+        n_parent <- rbind(n_parent, tapply(clusters %in% parent_clusters,
+                                           samples, sum))
+        n_node <- rbind(n_node, tapply(clusters %in% child_clusters, samples,
+                                       sum))
+    }
+
+    glmm_p_vals <- data.frame(matrix(nrow=nrow(n_node), ncol=4))
+    colnames(glmm_p_vals) <- c("stat_total", "pval_total",
+                               "stat_parent", "pval_parent")
+
+    n_cells_smp <- colSums(n_node[td %>% filter(isTip) %>% pull(node),])
+
+    experiment_info <- data.frame(sample_id=samples,
+                                  condition=classes) %>%
+        distinct() %>%
+        left_join(data.frame(n_cells=n_cells_smp,
+                             sample_id=names(n_cells_smp)),
+                  by="sample_id")
+    contrast <- matrix(c(0, 1), ncol=2)
+    formula <- diffcyt::createFormula(experiment_info,
+                                      cols_fixed="condition",
+                                      cols_random = "sample_id")
+    levels(formula$data$condition) <- c(pos_class_name, neg_class_name)
+
+    for (i in seq_len(nrow(n_node))) {
+        tryCatch({
+            # data for cluster i
+            # note: divide by total number of cells per sample (after filtering) to get
+            # proportions instead of counts
+            y <- n_node[i, ] / n_cells_smp
+            data_i <- cbind(y, n_cells_smp, formula$data)
+            # fit model
+            # note: provide proportions (y) together with weights for total number of cells per
+            # sample (n_cells_smp); this is equivalent to providing counts
+            fit <- lme4::glmer(formula$formula, data = data_i, family = "binomial", weights = n_cells_smp)
+            # test contrast
+            test <- multcomp::glht(fit, contrast)
+            # return p-value
+            glmm_p_vals[i,"stat_total"] <- summary(test)$test$tstat
+            glmm_p_vals[i,"pval_total"] <- summary(test)$test$pvalues
+            # return NA as p-value if there is an error
+        }, error = function(e) NA)
+        tryCatch({
+            # data for cluster i
+            # note: divide by total number of cells per sample (after filtering) to get
+            # proportions instead of counts
+            y <- n_node[i, ] / n_parent[i,]
+            data_i <- cbind(y, n_cells_smp, formula$data)
+            # fit model
+            # note: provide proportions (y) together with weights for total number of cells per
+            # sample (n_cells_smp); this is equivalent to providing counts
+            fit <- lme4::glmer(formula$formula, data = data_i, family = "binomial", weights = n_parent[i,])
+            # test contrast
+            test <- multcomp::glht(fit, contrast)
+            # return p-value
+            glmm_p_vals[i,"stat_parent"] <- summary(test)$test$tstat
+            glmm_p_vals[i,"pval_parent"] <- summary(test)$test$pvalues
+            # return NA as p-value if there is an error
+        }, error = function(e) NA)
+    }
+    td <- td %>%
+        bind_cols(glmm_p_vals)
+    return(td)
+}
+
+#' testTree
 #' @description This function takes a hierarchical tree of the cluster
 #' medians of a cytometry dataset, and then uses this structure to perform
 #' t-tests between conditions of patients testing for difference using the
@@ -556,24 +733,34 @@ testTree <- function(phylo,
         stop("length(unique(classes)) > 2.
              treekoR can currently only test between two classes.")
     }
-    if (!(sig_test %in% c("ttest", "wilcox"))) {
-        stop("Significance test needs to be either 'ttest' or 'wilcox'")
+    if (!(sig_test %in% c("ttest", "wilcox", "edgeR", "GLMM"))) {
+        stop("Significance test needs to be either 'ttest', 'wilcox', 'edgeR' or 'GLMM'")
     }
 
     t <- findChildren(ggtree(phylo, branch.length="none"))
     td <- t$data
     td$label <- ifelse(is.na(td$label),td$node, td$label)
+    if (is.null(pos_class_name)) {
+        pos_class_name <- names(table(classes))[1]
+        neg_class_name <- names(table(classes))[2]
+    } else {
+        neg_class_name <- names(table(classes))[names(table(classes)) != pos_class_name]
+    }
+    if (sig_test == "edgeR") {
+        td <- runEdgeRTests(td, clusters, samples, classes, pos_class_name)
+        t$data <- td
+        return(t)
+    }
+    if (sig_test == "GLMM") {
+        td <- runGLMMTests(td, clusters, samples, classes, pos_class_name, neg_class_name)
+        t$data <- td
+        return(t)
+    }
     prop_df <- getCellProp(phylo,
                            clusters=clusters,
                            samples=samples,
                            classes=classes,
                            excl_top_node_parent=FALSE)
-    if (is.null(pos_class_name)) {
-        pos_class_name <- as.character(unique(prop_df$class)[1])
-        neg_class_name <- as.character(unique(prop_df$class)[2])
-    } else {
-        neg_class_name <- as.character(unique(prop_df$class)[unique(prop_df$class) != pos_class_name])
-    }
     prop_df$class <- factor(prop_df$class, levels=c(pos_class_name,neg_class_name))
     stat_parent <- stat_total <- pval_parent <- pval_total <- NULL
     for( i in seq_len(nrow(td))[-which(td$node == td$parent)]){
@@ -656,3 +843,5 @@ getTreeResults <- function(testedTree,
 
     return(res)
 }
+
+

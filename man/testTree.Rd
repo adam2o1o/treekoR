@@ -2,7 +2,7 @@
 % Please edit documentation in R/analyseTree.R
 \name{testTree}
 \alias{testTree}
-\title{Title}
+\title{testTree}
 \usage{
 testTree(
   phylo,
@@ -24,13 +24,9 @@ starting from 1.}
 
 \item{classes}{a vector containing the patient outcome/class each cell belongs to}
 
+\item{sig_test}{a character, either "ttest" or "wilcox" indicating the significance test to be used}
+
 \item{pos_class_name}{a character indicating which class is positive}
-
-\item{paired}{a boolean indicating whether to performed paired t-tests
-(not yet tested)}
-
-\item{subjects}{a vector containing which subject the cell belongs to, used
-to identify matched samples in paired t-tests (not yet tested)}
 }
 \value{
 a ggtree object with significance testing results in embedded data
