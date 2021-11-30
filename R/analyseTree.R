@@ -507,6 +507,7 @@ getCellGMeans <- function(phylo,
 #' starting from 1.
 #' @param classes a vector containing the patient outcome/class each cell belongs to
 #' @param samples a vector identifying the patient each cell belongs to
+#' @param pos_class_name a character indicating which class should be treated as positive
 #'
 #' @importFrom edgeR DGEList estimateDisp glmFit glmLRT topTags
 #' @importFrom dplyr %>% distinct mutate left_join rename
@@ -591,6 +592,8 @@ runEdgeRTests <- function(td,
 #' starting from 1.
 #' @param classes a vector containing the patient outcome/class each cell belongs to
 #' @param samples a vector identifying the patient each cell belongs to
+#' @param pos_class_name a character indicating which class should be treated as positive
+#' @param neg_class_name a character indicating which class should be treated as negative
 #'
 #' @importFrom diffcyt createFormula
 #' @importFrom lme4 glmer
@@ -692,6 +695,8 @@ runGLMMTests <- function(td,
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param pos_class_name a character indicating which class is positive
 #' @param sig_test a character, either "ttest" or "wilcox" indicating the significance test to be used
+#' @param p_adjust a character, indicating whether p-value adjustment should be performed. Valid
+#' values are in stats::p.adjust.methods
 #'
 #' @importFrom stats t.test wilcox.test as.formula
 #'
@@ -723,6 +728,7 @@ testTree <- function(phylo,
                      samples,
                      classes,
                      sig_test="ttest",
+                     p_adjust=NULL,
                      pos_class_name=NULL){
     if (!is.null(pos_class_name)) {
         if (!pos_class_name %in% unique(classes)) {
