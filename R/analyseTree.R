@@ -506,6 +506,7 @@ getCellGMeans <- function(phylo,
 #' (can be character or numeric). If numeric, cluster names need to be consecutive
 #' starting from 1.
 #' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param pos_class_name a character indicating which class is positive
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param pos_class_name a character indicating which class should be treated as positive
 #'
@@ -591,6 +592,8 @@ runEdgeRTests <- function(td,
 #' (can be character or numeric). If numeric, cluster names need to be consecutive
 #' starting from 1.
 #' @param classes a vector containing the patient outcome/class each cell belongs to
+#' @param pos_class_name a character indicating which class is positive
+#' @param neg_class_name a character indicating which class is negative
 #' @param samples a vector identifying the patient each cell belongs to
 #' @param pos_class_name a character indicating which class should be treated as positive
 #' @param neg_class_name a character indicating which class should be treated as negative
