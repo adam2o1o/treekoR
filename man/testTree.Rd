@@ -10,6 +10,7 @@ testTree(
   samples,
   classes,
   sig_test = "ttest",
+  p_adjust = NULL,
   pos_class_name = NULL
 )
 }
@@ -25,6 +26,9 @@ starting from 1.}
 \item{classes}{a vector containing the patient outcome/class each cell belongs to}
 
 \item{sig_test}{a character, either "ttest" or "wilcox" indicating the significance test to be used}
+
+\item{p_adjust}{a character, indicating whether p-value adjustment should be performed. Valid
+values are in stats::p.adjust.methods}
 
 \item{pos_class_name}{a character indicating which class is positive}
 }

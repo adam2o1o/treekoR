@@ -16,6 +16,8 @@ starting from 1.}
 \item{samples}{a vector identifying the patient each cell belongs to}
 
 \item{classes}{a vector containing the patient outcome/class each cell belongs to}
+
+\item{pos_class_name}{a character indicating which class should be treated as positive}
 }
 \value{
 a dataframe with pvalues, test statistic (signed -log10(p)), and FDR
