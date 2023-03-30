@@ -27,7 +27,7 @@ BiocManager::install("treekoR")
 
 ### References
 
-- Identifying cellular-to-phenotype associations by elucidating hierarchical relationships in high-dimensional cytometry data. Adam Chan, Wei Jiang, Emily Blyth, Jean Yang, Ellis Patrick. bioRxiv 2021.07.08.451609; doi: https://doi.org/10.1101/2021.07.08.451609
+- Identifying cellular-to-phenotype associations by elucidating hierarchical relationships in high-dimensional cytometry data. Adam Chan, Wei Jiang, Emily Blyth, Jean Yang, Ellis Patrick. Genome Biology 2021.07.08.451609; doi: http://dx.doi.org/10.1186/s13059-021-02526-5
 
 ---
 
