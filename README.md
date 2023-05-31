@@ -35,3 +35,7 @@ BiocManager::install("treekoR")
 
 `treekoR` is still under active development. Any feedback related to the package and its use is immensely appreciated. 
 - R package related issues should be raised [here](https://github.com/adam2o1o/treekoR/issues). 
+
+### Citation
+
+Chan, A., Jiang, W., Blyth, E. *et al.* treekoR: identifying cellular-to-phenotype associations by elucidating hierarchical relationships in high-dimensional cytometry data. *Genome Biol* **22**, 324 (2021). https://doi.org/10.1186/s13059-021-02526-5
